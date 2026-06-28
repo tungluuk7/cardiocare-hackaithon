@@ -1,14 +1,14 @@
-# Lõi Backend
+
 fastapi==0.110.0
 uvicorn==0.29.0
 pydantic==2.6.4
 
-# Đọc biến môi trường từ file .env
+
 python-dotenv==1.0.1
 
-# Gọi API ra bên ngoài (cho Smartbot và VNPT Voice)
+
 httpx==0.27.0
 requests==2.31.0
 
-# Database (SQLAlchemy - tùy chọn nếu team dùng ORM thay vì sqlite3 thuần)
+
 SQLAlchemy==2.0.28
