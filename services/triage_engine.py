@@ -17,10 +17,15 @@ from services.symptom_schema import (
     RED_SYMPTOMS,
     YELLOW_SYMPTOMS,
     TRIAGE_MESSAGES,
+    SYMPTOM_LABELS,
     match_symptoms,
 )
 
 logger = logging.getLogger("cardiocare.triage")
+
+# Tập ID theo mức độ (dùng để phân loại nhanh)
+_RED_IDS    = {s.id for s in RED_SYMPTOMS}
+_YELLOW_IDS = {s.id for s in YELLOW_SYMPTOMS}
 
 # Chỉ log "Smartbot chưa cấu hình" một lần để tránh spam mỗi request.
 _smartbot_unconfigured_logged = False
@@ -29,14 +34,9 @@ _smartbot_unconfigured_logged = False
 @dataclass
 class TriageResult:
     level: str                  # "RED" | "YELLOW" | "GREEN"
-    symptoms: List[str]         # tên chuẩn, vd ["đau ngực", "ngất"]
+    symptoms: List[str]         # ID triệu chứng, vd ["dau_nguc", "ngat"]
     message: str                # chuỗi khuyến nghị
-    symptom_labels: List[str]   # nhãn hiển thị cho UI/alert, vd ["Đau ngực", "Ngất"]
-
-
-def _to_label(name: str) -> str:
-    """Viết hoa chữ cái đầu để hiển thị đẹp: 'đau ngực' → 'Đau ngực'."""
-    return name[:1].upper() + name[1:] if name else name
+    symptom_labels: List[str]   # nhãn hiển thị, vd ["Đau ngực", "Ngất"]
 
 
 
@@ -61,12 +61,12 @@ async def analyze(transcript: str) -> TriageResult:
         logger.warning("Smartbot loi (%s) — fallback keyword matching.", type(exc).__name__)
         found = _keyword_match(transcript)
 
-    level = _determine_level(found)
+    level = _classify(found)
 
     return TriageResult(
         level=level,
         symptoms=found,
-        symptom_labels=[_to_label(s) for s in found],
+        symptom_labels=[SYMPTOM_LABELS[s] for s in found if s in SYMPTOM_LABELS],
         message=TRIAGE_MESSAGES[level],
     )
 
@@ -81,12 +81,14 @@ def _keyword_match(transcript: str) -> List[str]:
     return match_symptoms(transcript)
 
 
-def _determine_level(symptoms: List[str]) -> str:
-    red_names   = {s.name for s in RED_SYMPTOMS}
-    yellow_names = {s.name for s in YELLOW_SYMPTOMS}
-
-    if any(s in red_names for s in symptoms):
+def _classify(symptoms: List[str]) -> str:
+    """Phân loại mức độ từ danh sách ID triệu chứng. Bất kỳ RED → RED; có YELLOW → YELLOW."""
+    if any(s in _RED_IDS for s in symptoms):
         return "RED"
-    if any(s in yellow_names for s in symptoms):
+    if any(s in _YELLOW_IDS for s in symptoms):
         return "YELLOW"
     return "GREEN"
+
+
+# Alias tương thích ngược (code cũ có thể gọi _determine_level)
+_determine_level = _classify

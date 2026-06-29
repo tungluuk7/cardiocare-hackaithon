@@ -28,13 +28,14 @@ import re
 
 from services.symptom_schema import ALL_SYMPTOMS, match_symptoms
 
-# Map mọi cách gọi (tên chuẩn + từ khoá) → tên triệu chứng chuẩn, để chuẩn hoá
-# output GenAI về đúng tên mà rule engine hiểu.
+# Map mọi cách gọi (ID + nhãn + từ khoá) → ID triệu chứng chuẩn, để chuẩn hoá
+# output GenAI về đúng ID mà rule engine hiểu.
 _CANON = {}
 for _s in ALL_SYMPTOMS:
-    _CANON[_s.name.lower()] = _s.name
+    _CANON[_s.id] = _s.id
+    _CANON[_s.name.lower()] = _s.id
     for _kw in _s.keywords:
-        _CANON[_kw.lower()] = _s.name
+        _CANON[_kw.lower()] = _s.id
 
 # ── Đọc credentials từ .env ───────────────────────────────────────────────────
 SMARTBOT_API_URL      = os.getenv("SMARTBOT_API_URL", "https://assistant-stream.vnpt.vn/v1/conversation")

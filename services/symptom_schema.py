@@ -5,13 +5,16 @@ from typing import List
 
 @dataclass
 class Symptom:
-    name: str
-    keywords: List[str]
-    triage_level: str  
+    id: str             # mã định danh snake_case (key dùng chung Dev 1/Dev 3), vd "dau_nguc"
+    name: str           # nhãn tiếng Việt hiển thị, vd "Đau ngực"
+    keywords: List[str] # các cách bệnh nhân diễn đạt (lowercase, để matching)
+    triage_level: str   # "RED" | "YELLOW"
+
 
 RED_SYMPTOMS: List[Symptom] = [
     Symptom(
-        name="đau ngực",
+        id="dau_nguc",
+        name="Đau ngực",
         keywords=[
             "đau ngực", "tức ngực", "đau tim", "thắt ngực", "nặng ngực",
             "đau ở ngực", "ngực đau", "ngực tức", "đau vùng ngực",
@@ -19,7 +22,8 @@ RED_SYMPTOMS: List[Symptom] = [
         triage_level="RED",
     ),
     Symptom(
-        name="ngất",
+        id="ngat",
+        name="Ngất",
         keywords=[
             "ngất", "mất ý thức", "bất tỉnh", "xỉu", "ngã xỉu",
             "ngất xỉu", "ngất đi", "mê man",
@@ -27,7 +31,8 @@ RED_SYMPTOMS: List[Symptom] = [
         triage_level="RED",
     ),
     Symptom(
-        name="chảy máu vết thương",
+        id="chay_mau",
+        name="Chảy máu vết thương",
         keywords=[
             "chảy máu", "xuất huyết", "máu chảy", "vết thương chảy máu",
             "máu nhiều", "mất máu",
@@ -38,7 +43,8 @@ RED_SYMPTOMS: List[Symptom] = [
 
 YELLOW_SYMPTOMS: List[Symptom] = [
     Symptom(
-        name="khó thở",
+        id="kho_tho",
+        name="Khó thở",
         keywords=[
             "khó thở", "thở khó", "thở không được", "hụt hơi",
             "thiếu hơi", "thở yếu", "thở nặng",
@@ -46,7 +52,8 @@ YELLOW_SYMPTOMS: List[Symptom] = [
         triage_level="YELLOW",
     ),
     Symptom(
-        name="chóng mặt",
+        id="chong_mat",
+        name="Chóng mặt",
         keywords=[
             "chóng mặt", "hoa mắt", "váng đầu", "xây xẩm",
             "quay cuồng", "đầu váng",
@@ -54,7 +61,8 @@ YELLOW_SYMPTOMS: List[Symptom] = [
         triage_level="YELLOW",
     ),
     Symptom(
-        name="phù chân",
+        id="phu_chan",
+        name="Phù chân",
         keywords=[
             "phù chân", "sưng chân", "chân sưng", "phù nề",
             "chân to hơn", "chân bị sưng", "hơi sưng", "bị sưng",
@@ -62,7 +70,8 @@ YELLOW_SYMPTOMS: List[Symptom] = [
         triage_level="YELLOW",
     ),
     Symptom(
-        name="hồi hộp",
+        id="hoi_hop",
+        name="Hồi hộp",
         keywords=[
             "hồi hộp", "tim đập nhanh", "tim đập mạnh",
             "loạn nhịp", "đánh trống ngực",
@@ -70,7 +79,8 @@ YELLOW_SYMPTOMS: List[Symptom] = [
         triage_level="YELLOW",
     ),
     Symptom(
-        name="sốt",
+        id="sot",
+        name="Sốt",
         keywords=[
             "sốt", "nóng sốt", "nhiệt độ cao", "nóng người", "sốt cao",
         ],
@@ -79,6 +89,10 @@ YELLOW_SYMPTOMS: List[Symptom] = [
 ]
 
 ALL_SYMPTOMS: List[Symptom] = RED_SYMPTOMS + YELLOW_SYMPTOMS
+
+# Map ID → nhãn tiếng Việt hiển thị. Dev 1/Dev 3 dùng để render label cho người đọc.
+# vd SYMPTOM_LABELS["kho_tho"] == "Khó thở"
+SYMPTOM_LABELS = {s.id: s.name for s in ALL_SYMPTOMS}
 
 # Token phủ định (so khớp theo từ, không theo chuỗi con — tránh lỗi " k " thiếu space).
 # Gồm cả biến thể không dấu vì STT đôi khi trả về không dấu.
@@ -138,12 +152,12 @@ def _clause_has_symptom(clause: str, keywords: List[str]) -> bool:
 
 def match_symptoms(text: str) -> List[str]:
     """
-    Trả về danh sách tên triệu chứng phát hiện trong text.
+    Trả về danh sách ID triệu chứng phát hiện trong text (vd ["dau_nguc", "ngat"]).
     Thứ tự ưu tiên RED trước YELLOW (theo thứ tự ALL_SYMPTOMS), không trùng lặp.
     """
     clauses = _split_clauses(text.lower())
     found: List[str] = []
     for symptom in ALL_SYMPTOMS:
         if any(_clause_has_symptom(c, symptom.keywords) for c in clauses):
-            found.append(symptom.name)
+            found.append(symptom.id)
     return found
