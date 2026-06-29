@@ -1,14 +1,15 @@
-
+# Hợp nhất deps của cả nhóm (giữ bản pin sẵn có) + bổ sung cho backend Dev 1.
 fastapi==0.110.0
-uvicorn==0.29.0
+uvicorn[standard]==0.29.0
 pydantic==2.6.4
-
-
 python-dotenv==1.0.1
-
-
 httpx==0.27.0
 requests==2.31.0
-
-
 SQLAlchemy==2.0.28
+
+# Dev 1 — bắt buộc cho upload file (Form/File trong calls.py, chatbot.py)
+python-multipart==0.0.9
+
+# Dev 1 — fallback giọng nói khi VNPT chưa sẵn sàng (tuỳ chọn)
+gTTS==2.5.1
+SpeechRecognition==3.10.4

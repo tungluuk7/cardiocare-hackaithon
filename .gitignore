@@ -218,3 +218,12 @@ __marimo__/
 .streamlit/secrets.toml
 
 .env
+
+# CardioCare — file runtime / dữ liệu cục bộ (KHÔNG commit)
+*.db
+*.db-journal
+audio_uploads/
+callbacks/
+last_call_recording.wav
+ngrok.exe
+ngrok.zip
