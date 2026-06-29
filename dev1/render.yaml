@@ -1,0 +1,66 @@
+# Render Blueprint — deploy CardioCare chỉ với 1 click.
+# Cách dùng: push repo lên GitHub → Render → New → Blueprint → chọn repo.
+# Các biến bí mật (sync: false) điền trong Render Dashboard sau khi tạo service.
+services:
+  - type: web
+    name: cardiocare
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      # ── Lưu ý SQLite ──────────────────────────────────────────────────────
+      # Free tier KHÔNG có persistent disk → DB reset sau mỗi lần redeploy/restart
+      # (đủ cho demo). Muốn giữ dữ liệu: nâng plan, thêm block `disk:` bên dưới
+      # và đặt DB_PATH=/var/data/cardiocare.db
+      - key: DB_PATH
+        value: cardiocare.db
+      - key: CALL_SCHEDULER_ENABLED
+        value: "true"
+      # URL public của chính service này — Twilio cần để gọi webhook ghi âm về.
+      # Sau khi deploy xong, copy URL Render cấp (vd https://cardiocare.onrender.com)
+      # vào đây qua Dashboard rồi redeploy.
+      - key: PUBLIC_BASE_URL
+        sync: false
+      # ── VNPT SmartVoice (TTS/STT) ─────────────────────────────────────────
+      - key: VNPT_VOICE_TTS_URL
+        sync: false
+      - key: VNPT_VOICE_STT_URL
+        sync: false
+      - key: VNPT_VOICE_TOKEN_ID
+        sync: false
+      - key: VNPT_VOICE_TOKEN_KEY
+        sync: false
+      - key: VNPT_VOICE_STT_TOKEN_ID
+        sync: false
+      - key: VNPT_VOICE_STT_TOKEN_KEY
+        sync: false
+      - key: VNPT_VOICE_ACCESS_TOKEN
+        sync: false
+      # ── Twilio (gọi điện thật) ────────────────────────────────────────────
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
+        sync: false
+      # ── Telegram (báo người thân khi RED) ─────────────────────────────────
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      # ── Zalo ZNS (production, tuỳ chọn) ───────────────────────────────────
+      - key: ZALO_OA_ACCESS_TOKEN
+        sync: false
+      - key: ZALO_ZNS_TEMPLATE_ID
+        sync: false
+
+    # ── Bật persistent disk để giữ SQLite qua các lần deploy (cần plan trả phí) ──
+    # disk:
+    #   name: cardiocare-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
