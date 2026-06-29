@@ -28,9 +28,15 @@ _smartbot_unconfigured_logged = False
 
 @dataclass
 class TriageResult:
-    level: str             
-    symptoms: List[str]     
-    message: str            
+    level: str                  # "RED" | "YELLOW" | "GREEN"
+    symptoms: List[str]         # tên chuẩn, vd ["đau ngực", "ngất"]
+    message: str                # chuỗi khuyến nghị
+    symptom_labels: List[str]   # nhãn hiển thị cho UI/alert, vd ["Đau ngực", "Ngất"]
+
+
+def _to_label(name: str) -> str:
+    """Viết hoa chữ cái đầu để hiển thị đẹp: 'đau ngực' → 'Đau ngực'."""
+    return name[:1].upper() + name[1:] if name else name
 
 
 
@@ -58,8 +64,9 @@ async def analyze(transcript: str) -> TriageResult:
     level = _determine_level(found)
 
     return TriageResult(
-        level=level,    
+        level=level,
         symptoms=found,
+        symptom_labels=[_to_label(s) for s in found],
         message=TRIAGE_MESSAGES[level],
     )
 
