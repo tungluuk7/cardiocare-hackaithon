@@ -26,7 +26,7 @@ CONTRACT với Dev 3:
 import json
 from fastapi import APIRouter, UploadFile, File
 from pydantic import BaseModel
-from services.triage_engine import analyze, _classify
+from services.triage_engine import analyze, _determine_level
 from services.chatbot_flow import generate_reply, get_opening_question
 from services.symptom_schema import SYMPTOM_LABELS
 from services.vnpt_voice import speech_to_text
@@ -76,7 +76,7 @@ async def chat_message(body: ChatIn):
     session["turn"] = turn + 1
 
     # Triage dựa trên tất cả triệu chứng đã phát hiện
-    final_level = _classify(accumulated)
+    final_level = _determine_level(accumulated)
     labels = [SYMPTOM_LABELS[s] for s in accumulated if s in SYMPTOM_LABELS]
 
     # Sinh câu trả lời
