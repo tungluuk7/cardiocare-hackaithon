@@ -56,7 +56,7 @@ body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
 </style>
 </head>
 <body class="text-on-surface bg-background min-h-screen">
-<div class="max-w-4xl mx-auto p-gutter">
+<div class="max-w-6xl mx-auto p-gutter">
     <div class="flex items-center gap-4 mb-6">
         <a href="/static/index.html" class="flex items-center gap-2 text-primary font-bold hover:text-[#2563eb] transition-colors">
             <span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
@@ -67,25 +67,36 @@ body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
     <div id="loadingMsg" class="text-center text-on-surface-variant py-12">Đang tải thông tin bệnh nhân...</div>
 
     <div id="patientInfo" class="hidden">
-        <div class="glass-card rounded-xl p-6 mb-6">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h2 class="font-headline-lg text-headline-lg text-on-surface" id="pName"></h2>
-                    <p class="text-body-md text-on-surface-variant" id="pAgePhone"></p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left: Patient Info -->
+            <div class="lg:col-span-1">
+                <div class="glass-card rounded-xl p-6 border-2" id="pInfoCard">
+                    <div class="mb-4">
+                        <h2 class="font-headline-lg text-headline-lg text-on-surface" id="pName"></h2>
+                        <p class="text-body-md text-on-surface-variant" id="pAgePhone"></p>
+                    </div>
+                    <div class="flex items-center gap-2 mb-4 flex-wrap">
+                        <span id="pLevelBadge" class="px-4 py-1.5 rounded-full text-[13px] font-bold text-white"></span>
+                    </div>
+                    <div class="space-y-3 text-body-md">
+                        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="stethoscope">stethoscope</span><span class="text-on-surface-variant">Bác sĩ:</span><span class="font-semibold ml-auto text-right" id="pDoctor"></span></div>
+                        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="description">description</span><span class="text-on-surface-variant">Chuẩn đoán:</span><span class="font-semibold ml-auto text-right" id="pDiagnosis"></span></div>
+                        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="calendar_today">calendar_today</span><span class="text-on-surface-variant">Ngày xuất viện:</span><span class="font-semibold ml-auto text-right" id="pDischarge"></span></div>
+                        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="contacts">contacts</span><span class="text-on-surface-variant">SĐT người thân:</span><span class="font-semibold ml-auto text-right" id="pFamilyPhone"></span></div>
+                        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="event">event</span><span class="text-on-surface-variant">Ngày tạo:</span><span class="font-semibold ml-auto text-right" id="pCreatedAt"></span></div>
+                    </div>
+                    <button id="callPatientBtn" class="mt-5 w-full py-3 bg-primary text-on-primary rounded-lg font-bold text-[14px] flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+                        <span class="material-symbols-outlined text-[20px]" data-icon="call">call</span>
+                        Gọi ngay
+                    </button>
                 </div>
-                <span id="pLevelBadge" class="px-4 py-1.5 rounded-full text-[13px] font-bold text-white"></span>
             </div>
-            <div class="grid grid-cols-2 gap-4 text-body-md">
-                <div><span class="text-on-surface-variant">Bác sĩ:</span> <span class="font-semibold" id="pDoctor"></span></div>
-                <div><span class="text-on-surface-variant">Chuẩn đoán:</span> <span class="font-semibold" id="pDiagnosis"></span></div>
-                <div><span class="text-on-surface-variant">Ngày xuất viện:</span> <span class="font-semibold" id="pDischarge"></span></div>
-                <div><span class="text-on-surface-variant">SĐT người thân:</span> <span class="font-semibold" id="pFamilyPhone"></span></div>
-                <div><span class="text-on-surface-variant">Ngày tạo:</span> <span class="font-semibold" id="pCreatedAt"></span></div>
+            <!-- Right: Call History -->
+            <div class="lg:col-span-2">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">Lịch sử cuộc gọi</h3>
+                <div id="historyList" class="space-y-3"></div>
             </div>
         </div>
-
-        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">Lịch sử cuộc gọi</h3>
-        <div id="historyList" class="space-y-3"></div>
     </div>
 </div>
 
@@ -143,11 +154,14 @@ function loadPatient() {
             lastLevel = history[0].level;
         }
         var badge = document.getElementById('pLevelBadge');
+        var infoCard = document.getElementById('pInfoCard');
         if (lastLevel) {
             badge.className = 'px-4 py-1.5 rounded-full text-[13px] font-bold text-white ' + LEVEL_BG[lastLevel];
             badge.textContent = LEVEL_LABEL[lastLevel] + ' (' + lastLevel + ')';
+            infoCard.className = 'glass-card rounded-xl p-6 border-2 border-' + (lastLevel === 'RED' ? 'error' : lastLevel === 'YELLOW' ? 'risk-yellow' : 'tertiary');
         } else {
             badge.className = 'hidden';
+            infoCard.className = 'glass-card rounded-xl p-6 border-2 border-outline-variant';
         }
 
         var list = document.getElementById('historyList');
@@ -185,7 +199,8 @@ function loadPatient() {
 
             var transcript = h.transcript ? h.transcript : '';
 
-            html += '<div class="glass-card rounded-xl p-4">';
+            var borderColor = level === 'RED' ? 'border-error' : level === 'YELLOW' ? 'border-risk-yellow' : 'border-tertiary';
+            html += '<div class="glass-card rounded-xl p-4 border-2 ' + borderColor + '">';
             html += '<div class="flex items-center justify-between mb-2">';
             html += '<span class="text-sm text-on-surface-variant">' + formatDateTime(h.called_at) + '</span>';
             html += '<span class="px-3 py-0.5 ' + bg + ' text-white rounded-full text-[12px] font-bold">' + label + '</span>';
@@ -207,6 +222,30 @@ function loadPatient() {
 }
 
 document.addEventListener('DOMContentLoaded', loadPatient);
+
+document.getElementById('callPatientBtn').addEventListener('click', function() {
+    var id = getQueryParam('id');
+    if (!id) return;
+    var btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" data-icon="sync">sync</span> Đang gọi...';
+    fetch('/telephony/call/' + id, { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span> Đã gọi ✓';
+            setTimeout(function() {
+                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" data-icon="call">call</span> Gọi ngay';
+                btn.disabled = false;
+            }, 3000);
+        })
+        .catch(function() {
+            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" data-icon="error">error</span> Thất bại';
+            setTimeout(function() {
+                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" data-icon="call">call</span> Gọi ngay';
+                btn.disabled = false;
+            }, 3000);
+        });
+});
 </script>
 </body>
 </html>

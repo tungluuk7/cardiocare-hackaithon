@@ -53,8 +53,12 @@ body { font-family: 'Inter', sans-serif; background: #e8eaed; display: flex; ali
 .chat-input-area input { flex: 1; border: 1px solid #e5e7eb; border-radius: 20px; padding: 9px 16px; font-size: 14px; outline: none; }
 .chat-input-area input:focus { border-color: #004ac6; }
 .chat-input-area button.send { width: 38px; height: 38px; border-radius: 50%; background: #004ac6; color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.15s; }
-.chat-input-area button.send:hover { transform: scale(1.05); }
-.chat-input-area button.send:active { transform: scale(0.95); }
+        .chat-input-area button.mic { width: 38px; height: 38px; border-radius: 50%; background: transparent; color: #737686; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+        .chat-input-area button.mic:hover { background: #f3f4f6; }
+        .chat-input-area button.mic.recording { background: #FB2C36; color: white; animation: pulse-record 1.2s ease-in-out infinite; }
+        @keyframes pulse-record { 0%, 100% { box-shadow: 0 0 0 0 rgba(251,44,54,0.4); } 50% { box-shadow: 0 0 0 8px rgba(251,44,54,0); } }
+        .chat-input-area button.send:hover { transform: scale(1.05); }
+        .chat-input-area button.send:active { transform: scale(0.95); }
 .home-indicator { width: 134px; height: 5px; background: #d4d4d4; border-radius: 99px; margin: 8px auto; }
 .patient-select-bar { padding: 8px 16px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #737686; }
 .patient-select-bar select { flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: white; }
@@ -115,6 +119,9 @@ body { font-family: 'Inter', sans-serif; background: #e8eaed; display: flex; ali
 
     <!-- Input Area -->
     <div class="chat-input-area">
+        <button class="mic" id="phoneMic">
+            <span class="material-symbols-outlined text-xl" data-icon="mic">mic</span>
+        </button>
         <input id="phoneInput" type="text" placeholder="Nhập tin nhắn..." autocomplete="off"/>
         <button class="send" id="phoneSend">
             <span class="material-symbols-outlined text-xl" data-icon="send">send</span>
@@ -266,6 +273,103 @@ document.getElementById('phoneSend').addEventListener('click', sendMessage);
 document.getElementById('phoneInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') sendMessage();
 });
+
+var mediaRecorder = null;
+var audioChunks = [];
+var isRecording = false;
+
+document.getElementById('phoneMic').addEventListener('click', function() {
+    if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        this.classList.remove('recording');
+        this.querySelector('span').textContent = 'mic';
+        this.querySelector('span').dataset.icon = 'mic';
+        return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        appendMessage('Trình duyệt không hỗ trợ ghi âm.', false);
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = function(e) {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = function() {
+                stream.getTracks().forEach(function(t) { t.stop(); });
+                var blob = new Blob(audioChunks, { type: 'audio/webm' });
+                sendAudio(blob);
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            var btn = document.getElementById('phoneMic');
+            btn.classList.add('recording');
+            btn.querySelector('span').textContent = 'stop';
+            btn.querySelector('span').dataset.icon = 'stop';
+        })
+        .catch(function() {
+            appendMessage('Không thể truy cập micro. Vui lòng kiểm tra quyền.', false);
+        });
+});
+
+function sendAudio(blob) {
+    var input = document.getElementById('phoneInput');
+    input.placeholder = 'Đang xử lý giọng nói...';
+    input.disabled = true;
+
+    var formData = new FormData();
+    formData.append('audio', blob, 'recording.webm');
+
+    fetch('/chatbot/transcribe', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var text = (data.text || '').trim();
+        input.placeholder = 'Nhập tin nhắn...';
+        input.disabled = false;
+        if (!text) {
+            appendMessage('Cháu chưa nghe rõ. Bác nói lại giúp cháu nhé!', false);
+            return;
+        }
+        appendMessage(text, true);
+        fetch('/chatbot/message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: text,
+                session_id: chatSessionId,
+                patient_id: chatPatientId
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            appendMessage(data.reply, false);
+            chatTurn = data.turn || 0;
+            chatLevel = data.triage_level || 'GREEN';
+            chatSymptoms = data.symptoms || [];
+            chatSymptomLabels = data.symptom_labels || [];
+            updateTriage();
+        })
+        .catch(function() {
+            appendMessage('Xin lỗi, cháu chưa nghe rõ. Bác nói lại giúp cháu nhé!', false);
+        });
+    })
+    .catch(function() {
+        input.placeholder = 'Nhập tin nhắn...';
+        input.disabled = false;
+        appendMessage('Lỗi xử lý giọng nói. Vui lòng thử lại.', false);
+    });
+}
 
 document.getElementById('phonePatientSelect').addEventListener('change', function() {
     var val = this.value;
