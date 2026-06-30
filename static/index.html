@@ -191,6 +191,11 @@
                 <span class="material-symbols-outlined" data-icon="emergency">emergency</span>
                 <span class="font-label-lg text-label-lg">Clinical Triage</span>
             </a>
+            <a class="flex items-center gap-3 px-3 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors"
+                href="/static/phone.html">
+                <span class="material-symbols-outlined" data-icon="phone_iphone">phone_iphone</span>
+                <span class="font-label-lg text-label-lg">Mô phỏng điện thoại</span>
+            </a>
         </nav>
         <div class="mt-auto border-t border-outline-variant pt-unit space-y-1">
             <button
@@ -354,11 +359,7 @@
             </div>
         </div>
     </main>
-    <!-- FAB for quick action -->
-    <button
-        class="fixed bottom-gutter right-gutter w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
-        <span class="material-symbols-outlined text-3xl" data-icon="add">add</span>
-    </button>
+    
     <script>
         var SYMPTOM_LABELS = {
             "dau_nguc": "Đau ngực", "ngat": "Ngất", "chay_mau": "Chảy máu vết thương",
@@ -509,6 +510,7 @@
         });
 
         document.addEventListener('DOMContentLoaded', loadPatients);
+
     </script>
 </body>
 
