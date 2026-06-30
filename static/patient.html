@@ -1,0 +1,212 @@
+<html class="light" lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CardioCare — Bệnh nhân</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: { extend: {
+        colors: {
+            "on-surface-variant": "#434655", "secondary-fixed": "#dae2fd",
+            "outline-variant": "#c3c6d7", "on-error-container": "#93000a",
+            "on-surface": "#191c1e", "on-tertiary-fixed": "#002113",
+            "on-tertiary-container": "#bdffdb", "tertiary-fixed-dim": "#4edea3",
+            "surface-tint": "#0053db", "primary-fixed": "#dbe1ff",
+            "tertiary": "#00BC7D", "primary-container": "#2563eb",
+            "surface-container-low": "#f2f4f6", "inverse-on-surface": "#eff1f3",
+            "error": "#FB2C36", "surface-container": "#eceef0",
+            "secondary-container": "#dae2fd", "surface-container-highest": "#e0e3e5",
+            "outline": "#737686", "on-tertiary": "#ffffff",
+            "error-container": "#ffdad6", "on-primary-fixed-variant": "#003ea8",
+            "tertiary-container": "#007d55", "on-secondary-fixed": "#131b2e",
+            "on-secondary-container": "#5c647a", "background": "#f7f9fb",
+            "secondary": "#565e74", "on-primary-container": "#eeefff",
+            "inverse-surface": "#2d3133", "on-tertiary-fixed-variant": "#005236",
+            "on-secondary-fixed-variant": "#3f465c", "on-secondary": "#ffffff",
+            "inverse-primary": "#b4c5ff", "surface-dim": "#d8dadc",
+            "primary": "#004ac6", "surface-bright": "#f7f9fb",
+            "surface-container-lowest": "#ffffff", "primary-fixed-dim": "#b4c5ff",
+            "surface-variant": "#e0e3e5", "on-primary-fixed": "#00174b",
+            "surface": "#f7f9fb", "on-error": "#ffffff", "on-primary": "#ffffff",
+            "secondary-fixed-dim": "#bec6e0", "tertiary-fixed": "#6ffbbe",
+            "surface-container-high": "#e6e8ea", "on-background": "#191c1e",
+            "risk-yellow": "#FE9A00"
+        },
+        borderRadius: { DEFAULT: "0.5rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+        spacing: { "container-max": "1280px", unit: "8px", gutter: "24px", "touch-target-min": "48px" },
+        fontFamily: { "label-lg": ["Inter"], "headline-lg": ["Inter"], "body-md": ["Inter"], "headline-sm": ["Inter"], "body-lg": ["Inter"] },
+        fontSize: {
+            "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+            "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "headline-sm": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+        }
+    }}
+};
+</script>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+.glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); border: 1px solid rgba(226,232,240,1); }
+</style>
+</head>
+<body class="text-on-surface bg-background min-h-screen">
+<div class="max-w-4xl mx-auto p-gutter">
+    <div class="flex items-center gap-4 mb-6">
+        <a href="/static/index.html" class="flex items-center gap-2 text-primary font-bold hover:text-[#2563eb] transition-colors">
+            <span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+            Quay lại Dashboard
+        </a>
+    </div>
+
+    <div id="loadingMsg" class="text-center text-on-surface-variant py-12">Đang tải thông tin bệnh nhân...</div>
+
+    <div id="patientInfo" class="hidden">
+        <div class="glass-card rounded-xl p-6 mb-6">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="font-headline-lg text-headline-lg text-on-surface" id="pName"></h2>
+                    <p class="text-body-md text-on-surface-variant" id="pAgePhone"></p>
+                </div>
+                <span id="pLevelBadge" class="px-4 py-1.5 rounded-full text-[13px] font-bold text-white"></span>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-body-md">
+                <div><span class="text-on-surface-variant">Bác sĩ:</span> <span class="font-semibold" id="pDoctor"></span></div>
+                <div><span class="text-on-surface-variant">Chuẩn đoán:</span> <span class="font-semibold" id="pDiagnosis"></span></div>
+                <div><span class="text-on-surface-variant">Ngày xuất viện:</span> <span class="font-semibold" id="pDischarge"></span></div>
+                <div><span class="text-on-surface-variant">SĐT người thân:</span> <span class="font-semibold" id="pFamilyPhone"></span></div>
+                <div><span class="text-on-surface-variant">Ngày tạo:</span> <span class="font-semibold" id="pCreatedAt"></span></div>
+            </div>
+        </div>
+
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">Lịch sử cuộc gọi</h3>
+        <div id="historyList" class="space-y-3"></div>
+    </div>
+</div>
+
+<script>
+var SYMPTOM_LABELS = {
+    "dau_nguc": "Đau ngực", "ngat": "Ngất", "chay_mau": "Chảy máu vết thương",
+    "kho_tho": "Khó thở", "chong_mat": "Chóng mặt", "phu_chan": "Phù chân",
+    "hoi_hop": "Hồi hộp", "sot": "Sốt"
+};
+var LEVEL_BG = { "RED": "bg-error", "YELLOW": "bg-risk-yellow", "GREEN": "bg-tertiary" };
+var LEVEL_LABEL = { "RED": "Khẩn cấp", "YELLOW": "Theo dõi", "GREEN": "Bình thường" };
+
+function getQueryParam(name) {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(name);
+}
+
+function formatDateTime(dtStr) {
+    if (!dtStr) return "—";
+    return dtStr;
+}
+
+function loadPatient() {
+    var id = getQueryParam('id');
+    if (!id) {
+        document.getElementById('loadingMsg').textContent = 'Không tìm thấy mã bệnh nhân.';
+        return;
+    }
+
+    Promise.all([
+        fetch('/patients/' + id).then(function(r) { return r.json(); }),
+        fetch('/patients/' + id + '/history').then(function(r) { return r.json(); })
+    ])
+    .then(function(results) {
+        var patient = results[0];
+        var historyData = results[1];
+
+        document.getElementById('loadingMsg').classList.add('hidden');
+        document.getElementById('patientInfo').classList.remove('hidden');
+
+        document.getElementById('pName').textContent = patient.name || '—';
+        var agePhone = [];
+        if (patient.age) agePhone.push(patient.age + ' tuổi');
+        if (patient.phone) agePhone.push(patient.phone);
+        document.getElementById('pAgePhone').textContent = agePhone.join(' — ');
+        document.getElementById('pDoctor').textContent = patient.doctor_name || '—';
+        document.getElementById('pDiagnosis').textContent = patient.diagnosis || '—';
+        document.getElementById('pDischarge').textContent = patient.discharge_date || '—';
+        document.getElementById('pFamilyPhone').textContent = patient.family_phone || '—';
+        document.getElementById('pCreatedAt').textContent = patient.created_at || '—';
+
+        var lastLevel = null;
+        var history = historyData.history || [];
+        if (history.length > 0) {
+            lastLevel = history[0].level;
+        }
+        var badge = document.getElementById('pLevelBadge');
+        if (lastLevel) {
+            badge.className = 'px-4 py-1.5 rounded-full text-[13px] font-bold text-white ' + LEVEL_BG[lastLevel];
+            badge.textContent = LEVEL_LABEL[lastLevel] + ' (' + lastLevel + ')';
+        } else {
+            badge.className = 'hidden';
+        }
+
+        var list = document.getElementById('historyList');
+        if (history.length === 0) {
+            list.innerHTML = '<p class="text-center text-on-surface-variant py-8">Chưa có cuộc gọi nào.</p>';
+            return;
+        }
+
+        var html = '';
+        history.forEach(function(h) {
+            var level = h.level || 'GREEN';
+            var bg = LEVEL_BG[level] || 'bg-tertiary';
+            var label = LEVEL_LABEL[level] || level;
+
+            var symptoms = h.symptom_labels;
+            if (!symptoms && h.symptoms) {
+                if (typeof h.symptoms === 'string') {
+                    try { symptoms = JSON.parse(h.symptoms); } catch(e) { symptoms = []; }
+                } else { symptoms = h.symptoms; }
+                symptoms = symptoms.map(function(s) { return SYMPTOM_LABELS[s] || s; });
+            }
+            if (typeof symptoms === 'string') {
+                try { symptoms = JSON.parse(symptoms); } catch(e) { symptoms = []; }
+            }
+            if (!Array.isArray(symptoms)) symptoms = [];
+
+            var badgeHtml = '';
+            if (symptoms.length === 0) {
+                badgeHtml = '<span class="px-3 py-0.5 bg-tertiary text-white rounded-full text-[12px] font-bold">Không có triệu chứng</span>';
+            } else {
+                symptoms.forEach(function(s) {
+                    badgeHtml += '<span class="px-3 py-0.5 ' + bg + ' text-white rounded-full text-[12px] font-bold">' + s + '</span> ';
+                });
+            }
+
+            var transcript = h.transcript ? h.transcript : '';
+
+            html += '<div class="glass-card rounded-xl p-4">';
+            html += '<div class="flex items-center justify-between mb-2">';
+            html += '<span class="text-sm text-on-surface-variant">' + formatDateTime(h.called_at) + '</span>';
+            html += '<span class="px-3 py-0.5 ' + bg + ' text-white rounded-full text-[12px] font-bold">' + label + '</span>';
+            html += '</div>';
+            html += '<div class="flex flex-wrap gap-2 mb-2">' + badgeHtml + '</div>';
+            if (transcript) {
+                html += '<p class="text-body-md text-on-surface-variant italic">"' + transcript + '"</p>';
+            }
+            if (h.confidence !== null && h.confidence !== undefined) {
+                html += '<p class="text-[12px] text-on-surface-variant mt-1">Độ tin cậy: ' + (Math.round(h.confidence * 100)) + '%</p>';
+            }
+            html += '</div>';
+        });
+        list.innerHTML = html;
+    })
+    .catch(function(err) {
+        document.getElementById('loadingMsg').textContent = 'Lỗi tải dữ liệu: ' + err.message;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadPatient);
+</script>
+</body>
+</html>
