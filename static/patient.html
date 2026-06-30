@@ -84,8 +84,17 @@ body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
                         <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="calendar_today">calendar_today</span><span class="text-on-surface-variant">Ngày xuất viện:</span><span class="font-semibold ml-auto text-right" id="pDischarge"></span></div>
                         <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="contacts">contacts</span><span class="text-on-surface-variant">SĐT người thân:</span><span class="font-semibold ml-auto text-right" id="pFamilyPhone"></span></div>
                         <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="event">event</span><span class="text-on-surface-variant">Ngày tạo:</span><span class="font-semibold ml-auto text-right" id="pCreatedAt"></span></div>
+                        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-on-surface-variant text-xl" data-icon="schedule">schedule</span><span class="text-on-surface-variant">Lịch gọi:</span><span class="font-semibold ml-auto text-right" id="pCallTime"></span></div>
                     </div>
-                    <button id="callPatientBtn" class="mt-5 w-full py-3 bg-primary text-on-primary rounded-lg font-bold text-[14px] flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all">
+                    <div class="mt-4 pt-4 border-t border-outline-variant">
+                        <p class="text-[13px] font-bold text-on-surface mb-2">Cài giờ gọi tự động</p>
+                        <div class="flex items-center gap-2">
+                            <input type="time" id="callTimeInput" class="flex-1 border border-outline-variant rounded-lg px-3 py-2 text-sm">
+                            <button id="saveScheduleBtn" class="px-4 py-2 bg-primary text-on-primary rounded-lg text-[13px] font-bold whitespace-nowrap hover:brightness-110 active:scale-95 transition-all">Lưu</button>
+                        </div>
+                        <p id="scheduleStatus" class="text-[12px] text-on-surface-variant mt-1"></p>
+                    </div>
+                    <button id="callPatientBtn" class="mt-4 w-full py-3 bg-primary text-on-primary rounded-lg font-bold text-[14px] flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all">
                         <span class="material-symbols-outlined text-[20px]" data-icon="call">call</span>
                         Gọi ngay
                     </button>
@@ -147,6 +156,8 @@ function loadPatient() {
         document.getElementById('pDischarge').textContent = patient.discharge_date || '—';
         document.getElementById('pFamilyPhone').textContent = patient.family_phone || '—';
         document.getElementById('pCreatedAt').textContent = patient.created_at || '—';
+        document.getElementById('pCallTime').textContent = patient.call_time || 'Chưa cài';
+        document.getElementById('callTimeInput').value = patient.call_time || '';
 
         var lastLevel = null;
         var history = historyData.history || [];
@@ -245,6 +256,37 @@ document.getElementById('callPatientBtn').addEventListener('click', function() {
                 btn.disabled = false;
             }, 3000);
         });
+});
+
+document.getElementById('saveScheduleBtn').addEventListener('click', function() {
+    var id = getQueryParam('id');
+    var time = document.getElementById('callTimeInput').value;
+    var status = document.getElementById('scheduleStatus');
+    if (!time) {
+        status.textContent = 'Vui lòng chọn giờ.';
+        return;
+    }
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Đang lưu...';
+    fetch('/telephony/schedule/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ call_time: time })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        document.getElementById('pCallTime').textContent = data.call_time;
+        document.getElementById('callTimeInput').value = data.call_time;
+        status.textContent = 'Đã lưu ✓';
+        btn.textContent = 'Lưu';
+        btn.disabled = false;
+    })
+    .catch(function() {
+        status.textContent = 'Lỗi lưu giờ gọi.';
+        btn.textContent = 'Lưu';
+        btn.disabled = false;
+    });
 });
 </script>
 </body>
