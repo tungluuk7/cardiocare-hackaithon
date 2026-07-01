@@ -35,8 +35,28 @@ from database import get_conn
 
 router = APIRouter(prefix="/chatbot", tags=["chatbot"])
 
-# Session state: {session_id: {"symptoms": [...], "turn": 0}}
+# Session state: {session_id: {"symptoms": [...], "turn": 0, "clarify": 0}}
 _sessions: dict[str, dict] = {}
+
+# Số lần hỏi lại tối đa khi không nhận ra triệu chứng, trước khi lịch sự đi tiếp
+# (tránh vòng lặp "cháu chưa rõ ý bác" vô tận nếu bác nói linh tinh).
+_MAX_CLARIFY = 2
+
+# Câu hỏi lại — bám đúng điều bác vừa nói thay vì đọc câu kịch bản kế tiếp.
+# Câu 2 chủ động gợi ý đúng bộ từ khoá triệu chứng để lượt sau NER bắt được.
+_CLARIFY_PROMPTS = [
+    "Dạ cháu chưa nghe rõ ý bác lắm ạ. Bác thấy trong người khó chịu ở chỗ nào, "
+    "và bị như vậy từ khi nào ạ? Bác kể cháu nghe để cháu ghi lại giúp bác.",
+    "Dạ bác nói cụ thể hơn giúp cháu chút nhé ạ — ví dụ bác có tức ngực, khó thở, "
+    "mệt nhiều, chóng mặt, hồi hộp hay sưng phù chân không ạ? Bác có dấu hiệu nào "
+    "thì nói dấu hiệu đó, cháu ghi ngay cho bác.",
+]
+
+
+def _clarify_reply(clarify_count: int) -> str:
+    """Câu hỏi lại thứ `clarify_count` (1-based); vượt danh sách → dùng câu cuối."""
+    idx = min(clarify_count, len(_CLARIFY_PROMPTS)) - 1
+    return _CLARIFY_PROMPTS[idx]
 
 
 class ChatIn(BaseModel):
@@ -67,10 +87,12 @@ async def chat_message(body: ChatIn):
     # Phân tích triệu chứng từ tin nhắn này
     result = await analyze(body.message)
 
+    # Triệu chứng MỚI phát hiện ở riêng lượt này (chưa có trong session)
+    new_symptoms = [s for s in result.symptoms if s not in session["symptoms"]]
+
     # Cộng dồn triệu chứng qua các turn
-    for s in result.symptoms:
-        if s not in session["symptoms"]:
-            session["symptoms"].append(s)
+    for s in new_symptoms:
+        session["symptoms"].append(s)
 
     accumulated = session["symptoms"]
     session["turn"] = turn + 1
@@ -78,6 +100,24 @@ async def chat_message(body: ChatIn):
     # Triage dựa trên tất cả triệu chứng đã phát hiện
     final_level = _determine_level(accumulated)
     labels = [SYMPTOM_LABELS[s] for s in accumulated if s in SYMPTOM_LABELS]
+
+    # ── Chống "lan man": lượt này KHÔNG bắt được triệu chứng mới nào, và tổng thể
+    # vẫn chưa có gì đáng ngại (GREEN) → nghĩa là bot chưa hiểu / bác nói mơ hồ.
+    # Thay vì đọc câu kịch bản kế tiếp và khen "nghe bác khỏe cháu mừng", HỎI LẠI
+    # đúng trọng tâm. Giới hạn _MAX_CLARIFY lần rồi mới lịch sự đi tiếp.
+    if not new_symptoms and final_level == "GREEN":
+        session["clarify"] = session.get("clarify", 0) + 1
+        if session["clarify"] <= _MAX_CLARIFY:
+            return {
+                "reply":          _clarify_reply(session["clarify"]),
+                "triage_level":   "GREEN",
+                "symptoms":       accumulated,
+                "symptom_labels": labels,
+                "turn":           session["turn"],
+            }
+    else:
+        # Đã bắt được triệu chứng (hoặc đã lên YELLOW/RED) → reset bộ đếm hỏi lại.
+        session["clarify"] = 0
 
     # Sinh câu trả lời
     reply = generate_reply(accumulated, final_level, turn)
