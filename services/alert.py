@@ -6,8 +6,7 @@ import smtplib
 import json
 import sqlite3
 from email.mime.text import MIMEText
-from datetime import datetime
-from config import settings
+from config import settings, now_vn
 from services import zalo, telegram
 
 
@@ -78,7 +77,7 @@ def _notify_family(patient_id: int, patient_name: str, symptom_labels: list[str]
 
     family_phone = row[0] if row else None
     syms = ", ".join(symptom_labels) or "triệu chứng nguy hiểm"
-    thoi_gian = datetime.now().strftime("%H:%M %d/%m/%Y")
+    thoi_gian = now_vn().strftime("%H:%M %d/%m/%Y")
 
     msg = (
         f"🚨 CardioCare — CẢNH BÁO KHẨN CẤP\n"

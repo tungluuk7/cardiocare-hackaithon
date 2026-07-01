@@ -1,7 +1,24 @@
 from dotenv import load_dotenv
+from datetime import datetime, timezone, timedelta
 import os
 
 load_dotenv()
+
+# ── Múi giờ Việt Nam (UTC+7, không có DST) ──────────────────────────────────
+# Server deploy (Render) chạy UTC. Nếu lấy giờ theo múi giờ máy chủ
+# (datetime.now() "naive", hay SQLite datetime('now','localtime')) thì mọi mốc
+# thời gian sẽ lệch 7 giờ so với Hà Nội. Vì vậy LUÔN tính mốc Hà Nội tất định.
+VN_TZ = timezone(timedelta(hours=7))
+
+
+def now_vn() -> datetime:
+    """Thời điểm hiện tại theo giờ Hà Nội (UTC+7), độc lập múi giờ máy chủ."""
+    return datetime.now(VN_TZ)
+
+
+# Biểu thức SQLite cho "bây giờ" theo giờ Hà Nội. 'now' trong SQLite LUÔN là UTC,
+# nên cộng 7 giờ = giờ Việt Nam bất kể OS của server.
+SQLITE_NOW_VN = "datetime('now','+7 hours')"
 
 class Settings:
     # VNPT SmartVoice — domain gốc, code tự ghép path (/tts-service/..., /stt-service/...)

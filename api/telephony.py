@@ -65,7 +65,7 @@ async def twilio_recording(request: Request, patient_id: int):
             # Có RecordingUrl = bệnh nhân ĐÃ NHẤC MÁY và trả lời → ghi lại thời điểm
             with get_conn() as conn:
                 conn.execute(
-                    "UPDATE patients SET last_answered_at = datetime('now','localtime') WHERE id = ?",
+                    "UPDATE patients SET last_answered_at = datetime('now','+7 hours') WHERE id = ?",
                     (patient_id,),
                 )
             audio = await telephony.download_recording(rec_url)

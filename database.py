@@ -17,13 +17,13 @@ def create_tables():
             doctor_name   TEXT,
             discharge_date TEXT,
             diagnosis     TEXT,
-            created_at    TEXT DEFAULT (datetime('now','localtime'))
+            created_at    TEXT DEFAULT (datetime('now','+7 hours'))
         );
 
         CREATE TABLE IF NOT EXISTS call_logs (
             id            INTEGER PRIMARY KEY AUTOINCREMENT,
             patient_id    INTEGER NOT NULL REFERENCES patients(id),
-            called_at     TEXT DEFAULT (datetime('now','localtime')),
+            called_at     TEXT DEFAULT (datetime('now','+7 hours')),
             transcript    TEXT,
             audio_path    TEXT,
             status        TEXT DEFAULT 'pending'
@@ -37,7 +37,7 @@ def create_tables():
             symptom_labels TEXT,            -- JSON list of human-readable labels
             confidence     REAL,
             alert_sent     INTEGER DEFAULT 0,
-            created_at     TEXT DEFAULT (datetime('now','localtime'))
+            created_at     TEXT DEFAULT (datetime('now','+7 hours'))
         );
 
         CREATE TABLE IF NOT EXISTS alerts (
@@ -47,7 +47,7 @@ def create_tables():
             level        TEXT,
             symptoms     TEXT,            -- JSON list of symptom labels
             message      TEXT,
-            created_at   TEXT DEFAULT (datetime('now','localtime')),
+            created_at   TEXT DEFAULT (datetime('now','+7 hours')),
             seen         INTEGER DEFAULT 0
         );
         """)
