@@ -3,6 +3,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>CardioCare — Điện thoại</title>
+<script src="/static/js/smartux.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -132,6 +133,7 @@ body { font-family: 'Inter', sans-serif; background: #e8eaed; display: flex; ali
     <div class="home-indicator"></div>
 </div>
 
+<script src="/static/js/ux.js"></script>
 <script>
 var SYMPTOM_LABELS = {
     "dau_nguc": "Đau ngực", "ngat": "Ngất", "chay_mau": "Chảy máu vết thương",
@@ -219,6 +221,7 @@ function updateContactName() {
 function initChat() {
     var container = document.getElementById('phoneMessages');
     container.innerHTML = '';
+    UX.track('chat_open', {});
 
     fetch('/chatbot/opening')
         .then(function(r) { return r.json(); })
@@ -245,6 +248,7 @@ function sendMessage() {
     }
 
     appendMessage(text, true);
+    UX.track('chat_send', { channel: 'text' });
 
     fetch('/chatbot/message', {
         method: 'POST',
@@ -263,6 +267,7 @@ function sendMessage() {
         chatSymptoms = data.symptoms || [];
         chatSymptomLabels = data.symptom_labels || [];
         updateTriage();
+        UX.track('chat_completed', { level: chatLevel, turn: chatTurn, channel: 'text' });
     })
     .catch(function() {
         appendMessage('Xin lỗi, cháu chưa nghe rõ. Bác nói lại giúp cháu nhé!', false);
@@ -310,6 +315,7 @@ document.getElementById('phoneMic').addEventListener('click', function() {
 
             mediaRecorder.start();
             isRecording = true;
+            UX.track('chat_mic', {});
             var btn = document.getElementById('phoneMic');
             btn.classList.add('recording');
             btn.querySelector('span').textContent = 'stop';
@@ -359,6 +365,7 @@ function sendAudio(blob) {
             chatSymptoms = data.symptoms || [];
             chatSymptomLabels = data.symptom_labels || [];
             updateTriage();
+            UX.track('chat_completed', { level: chatLevel, turn: chatTurn, channel: 'voice' });
         })
         .catch(function() {
             appendMessage('Xin lỗi, cháu chưa nghe rõ. Bác nói lại giúp cháu nhé!', false);

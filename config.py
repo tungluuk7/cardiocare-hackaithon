@@ -72,4 +72,12 @@ class Settings:
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()  # từ @BotFather
     TELEGRAM_CHAT_ID:   str = os.getenv("TELEGRAM_CHAT_ID", "").strip()    # chat_id người thân/điều dưỡng
 
+    # ── VNPT SmartUX — thu thập & trực quan hoá tương tác người dùng trên web ─────
+    # app_key lấy sau khi tạo dự án tại https://console-smartux.vnpt.vn (tab Tích hợp).
+    # Để TRỐNG = tắt (trang web vẫn chạy bình thường, chỉ dùng lớp thu thập nội bộ).
+    SMARTUX_APP_KEY:  str = os.getenv("SMARTUX_APP_KEY", "").strip()
+    SMARTUX_URL:      str = os.getenv("SMARTUX_URL", "https://smartux.icenter.ai").strip().rstrip("/")
+    # Đường dẫn core SDK (console cấp trong đoạn snippet). Chỉnh nếu VNPT đổi path.
+    SMARTUX_SDK_PATH: str = os.getenv("SMARTUX_SDK_PATH", "/sdk/web/core-track.js").strip()
+
 settings = Settings()

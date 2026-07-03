@@ -1,0 +1,113 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CardioCare — UX Analytics</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+<style>
+    :root {
+        --bg: #f7f8fa; --surface: #ffffff; --border: #e2e5ea;
+        --text: #1a1c1e; --muted: #5b616e;
+        --red: #ba1a1a; --yellow: #d19a00; --green: #146c2e; --primary: #1565c0;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root { --bg: #111316; --surface: #1c1f24; --border: #2c3038;
+                --text: #e4e6ea; --muted: #a0a6b0; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+           background: var(--bg); color: var(--text); padding: 24px; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .tile .num { font-size: 32px; font-weight: 700; line-height: 1.1; }
+    .tile .lbl { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .tile.hero { border-left: 4px solid var(--primary); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px; }
+    .card h2 { font-size: 15px; margin: 0 0 14px; }
+    .row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
+    .row .name { width: 190px; flex-shrink: 0; }
+    .row .tag { font-size: 11px; color: var(--muted); width: 130px; flex-shrink: 0; }
+    .bar { flex: 1; height: 10px; background: var(--border); border-radius: 6px; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: var(--primary); border-radius: 6px; }
+    .row .val { width: 40px; text-align: right; font-weight: 600; }
+    .foot { color: var(--muted); font-size: 12px; margin-top: 20px; line-height: 1.6; }
+    .material-symbols-outlined { font-size: 22px; vertical-align: middle; }
+</style>
+
+<div class="wrap">
+    <h1><span class="material-symbols-outlined">insights</span> UX Analytics — CardioCare</h1>
+    <div class="sub">Bộ chỉ số đo lường trải nghiệm người dùng (kênh web). Nguồn: <span id="source">—</span></div>
+
+    <div class="tiles">
+        <div class="tile"><div class="num" id="t-total">—</div><div class="lbl">Tổng lượt tương tác</div></div>
+        <div class="tile"><div class="num" id="t-sessions">—</div><div class="lbl">Số phiên (điều dưỡng/người dùng)</div></div>
+        <div class="tile hero"><div class="num" id="t-redwait">—</div><div class="lbl">⏱ Thời gian phản ứng ca RED (giây, TB)</div></div>
+        <div class="tile"><div class="num" id="t-redcount">—</div><div class="lbl">Số ca RED đã được phản hồi</div></div>
+    </div>
+
+    <div class="card">
+        <h2>Tương tác theo loại sự kiện (gắn với nhóm UX Metric)</h2>
+        <div id="events"><div class="row"><span class="name">Đang tải…</span></div></div>
+    </div>
+
+    <div class="card">
+        <h2>Bộ lọc mức độ được dùng</h2>
+        <div id="filters"><div class="row"><span class="name">—</span></div></div>
+    </div>
+
+    <div class="foot">
+        Đây là lớp thu thập nội bộ (fallback), sẵn sàng chuyển sang <b>VNPT SmartUX</b> mà không đổi tên sự kiện.
+        Kênh <b>gọi điện</b> (giao diện chính của bệnh nhân) được đo riêng bằng dữ liệu backend
+        (<code>call_logs</code>, <code>last_answered_at</code>, <code>confidence</code>).
+    </div>
+</div>
+
+<script>
+    // Nhãn tiếng Việt + ánh xạ event → nhóm HEART (khớp bảng UX Metrics trong proposal)
+    var META = {
+        dashboard_view:      { label: 'Mở dashboard',            group: 'Adoption' },
+        filter_used:         { label: 'Lọc theo mức độ',         group: 'Engagement' },
+        patient_link_click:  { label: 'Bấm tên bệnh nhân',       group: 'Engagement' },
+        patient_detail_view: { label: 'Xem chi tiết bệnh nhân',  group: 'Adoption' },
+        call_initiated:      { label: 'Bấm gọi lại',             group: 'Task efficiency' },
+        red_acknowledged:    { label: 'Phản hồi ca RED',         group: 'Task efficiency ⭐' },
+        chat_open:           { label: 'Mở cửa sổ chat',          group: 'Engagement' },
+        chat_send:           { label: 'Gửi tin nhắn',            group: 'Engagement' },
+        chat_mic:            { label: 'Dùng micro',              group: 'Engagement' },
+        chat_completed:      { label: 'Hoàn thành hội thoại',    group: 'Task success' }
+    };
+
+    function bar(name, tag, value, max) {
+        var pct = max > 0 ? Math.round(value / max * 100) : 0;
+        return '<div class="row"><span class="name">' + name + '</span>' +
+               '<span class="tag">' + tag + '</span>' +
+               '<span class="bar"><span style="width:' + pct + '%"></span></span>' +
+               '<span class="val">' + value + '</span></div>';
+    }
+
+    fetch('/ux/report').then(function (r) { return r.json(); }).then(function (d) {
+        document.getElementById('source').textContent = d.source || '—';
+        document.getElementById('t-total').textContent = d.total_events;
+        document.getElementById('t-sessions').textContent = d.sessions;
+        document.getElementById('t-redwait').textContent = d.avg_red_wait_seconds == null ? '—' : d.avg_red_wait_seconds;
+        document.getElementById('t-redcount').textContent = d.red_ack_count;
+
+        var by = d.by_event || {};
+        var keys = Object.keys(META).filter(function (k) { return by[k]; });
+        var max = keys.reduce(function (m, k) { return Math.max(m, by[k]); }, 0);
+        document.getElementById('events').innerHTML = keys.length
+            ? keys.map(function (k) { return bar(META[k].label, META[k].group, by[k], max); }).join('')
+            : '<div class="row"><span class="name">Chưa có dữ liệu — hãy thao tác trên dashboard/chat rồi tải lại.</span></div>';
+
+        var fb = d.filter_breakdown || {};
+        var fkeys = Object.keys(fb);
+        var fmax = fkeys.reduce(function (m, k) { return Math.max(m, fb[k]); }, 0);
+        var fLabel = { red: 'RED', yellow: 'YELLOW', green: 'GREEN' };
+        document.getElementById('filters').innerHTML = fkeys.length
+            ? fkeys.map(function (k) { return bar(fLabel[k] || k, '', fb[k], fmax); }).join('')
+            : '<div class="row"><span class="name">Chưa có lượt lọc nào.</span></div>';
+    }).catch(function () {
+        document.getElementById('events').innerHTML = '<div class="row"><span class="name">Lỗi tải /ux/report</span></div>';
+    });
+</script>

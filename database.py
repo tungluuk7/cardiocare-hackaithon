@@ -50,6 +50,18 @@ def create_tables():
             created_at   TEXT DEFAULT (datetime('now','+7 hours')),
             seen         INTEGER DEFAULT 0
         );
+
+        -- UX Analytics: nhật ký tương tác người dùng trên web (dashboard/chat).
+        -- Lớp thu thập nội bộ, dùng làm fallback + nguồn số liệu UX Metrics khi
+        -- chưa có credentials VNPT SmartUX. Xem services/README hoặc api/ux.py.
+        CREATE TABLE IF NOT EXISTS ux_events (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id  TEXT,             -- ẩn danh, sinh phía client
+            event       TEXT NOT NULL,    -- dashboard_view | filter_used | red_acknowledged | ...
+            props       TEXT,             -- JSON payload tuỳ event (patient_id, wait_seconds, ...)
+            page        TEXT,             -- đường dẫn trang phát sinh sự kiện
+            created_at  TEXT DEFAULT (datetime('now','+7 hours'))
+        );
         """)
 
         # Migration: thêm column thiếu cho DB cũ (CREATE TABLE IF NOT EXISTS

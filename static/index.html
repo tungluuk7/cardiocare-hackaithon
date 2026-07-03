@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>CardioCare</title>
+    <script src="/static/js/smartux.js"></script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap"
         rel="stylesheet" />
@@ -360,7 +361,12 @@
         </div>
     </main>
     
+    <script src="/static/js/ux.js"></script>
     <script>
+        // Bản đồ hỗ trợ đo UX: mức độ hiện tại + thời điểm ca RED hiển thị trên màn hình.
+        var __patientLevel = {};
+        var __redShownAt = {};
+
         var SYMPTOM_LABELS = {
             "dau_nguc": "Đau ngực", "ngat": "Ngất", "chay_mau": "Chảy máu vết thương",
             "kho_tho": "Khó thở", "chong_mat": "Chóng mặt", "phu_chan": "Phù chân",
@@ -403,6 +409,12 @@
                 else if (level === 'YELLOW') yellow++;
                 else green++;
 
+                // Ghi mức độ + mốc thời gian ca RED xuất hiện (để đo thời gian phản ứng).
+                __patientLevel[p.id] = level;
+                if (level === 'RED' && !__redShownAt[p.id]) {
+                    __redShownAt[p.id] = Date.now();
+                }
+
                 var symptoms = p.last_symptoms;
                 if (typeof symptoms === 'string') {
                     try { symptoms = JSON.parse(symptoms); } catch (e) { symptoms = []; }
@@ -427,7 +439,7 @@
                 html += '<div class="w-3 h-3 rounded-full ' + LEVEL_BG[level] + ' mt-1 flex-shrink-0"></div>';
                 html += '<div class="flex-1">';
                 html += '<div class="flex items-center gap-2 mb-1">';
-                html += '<h4 class="font-bold text-body-lg text-on-surface"><a href="/static/patient.html?id=' + p.id + '" class="hover:text-primary transition-colors cursor-pointer">' + p.name + '</a></h4>';
+                html += '<h4 class="font-bold text-body-lg text-on-surface"><a href="/static/patient.html?id=' + p.id + '" onclick="UX.track(\'patient_link_click\', {patient_id: ' + p.id + '})" class="hover:text-primary transition-colors cursor-pointer">' + p.name + '</a></h4>';
                 html += ageStr ? '<span class="text-body-md text-on-surface-variant">' + ageStr + '</span>' : '';
                 html += extraInfo ? '<span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[12px] font-medium">' + extraInfo + '</span>' : '';
                 html += '</div>';
@@ -458,9 +470,11 @@
                 .then(function (data) {
                     if (!data || data.length === 0) {
                         list.innerHTML = '<p class="p-6 text-center text-on-surface-variant">Chưa có bệnh nhân nào. Hãy thêm bệnh nhân qua API hoặc seed dữ liệu demo.</p>';
+                        UX.track('dashboard_view', { count: 0 });
                         return;
                     }
                     renderPatients(data);
+                    UX.track('dashboard_view', { count: data.length });
                 })
                 .catch(function (err) {
                     list.innerHTML = '<p class="p-6 text-center text-error">Lỗi tải dữ liệu: ' + err.message + '</p>';
@@ -490,6 +504,7 @@
             document.getElementById('risk-' + risk).classList.add('active');
             queueTitle.innerText = riskData[risk].text;
             applyFilter(risk);
+            UX.track('filter_used', { risk: risk });
         }
 
         document.getElementById('resetFilter').addEventListener('click', function () {
@@ -512,6 +527,15 @@
         document.addEventListener('DOMContentLoaded', loadPatients);
 
         function callPatient(id, btn) {
+            // Đo UX: mọi lượt bấm gọi + riêng ca RED thì tính "thời gian phản ứng"
+            // (từ lúc ca RED hiện trên màn hình → lúc điều dưỡng bấm gọi).
+            var level = __patientLevel[id] || 'GREEN';
+            UX.track('call_initiated', { patient_id: id, level: level });
+            if (level === 'RED' && __redShownAt[id]) {
+                var waitSeconds = Math.round((Date.now() - __redShownAt[id]) / 1000);
+                UX.track('red_acknowledged', { patient_id: id, wait_seconds: waitSeconds });
+                delete __redShownAt[id];   // chỉ tính lần phản ứng đầu tiên
+            }
             btn.disabled = true;
             btn.innerHTML = '<span class="material-symbols-outlined text-[18px]" data-icon="sync">sync</span> Đang gọi...';
             fetch('/telephony/call/' + id, { method: 'POST' })
