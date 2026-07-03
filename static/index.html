@@ -462,22 +462,28 @@
             document.getElementById('greenCount').textContent = green;
         }
 
-        function loadPatients() {
+        // silent = true: làm mới ngầm (auto-refresh) — không hiện "Đang tải", không đếm lượt xem.
+        function loadPatients(silent) {
             var list = document.getElementById('patientList');
-            list.innerHTML = '<p class="p-6 text-center text-on-surface-variant">Đang tải dữ liệu...</p>';
+            if (!silent) {
+                list.innerHTML = '<p class="p-6 text-center text-on-surface-variant">Đang tải dữ liệu...</p>';
+            }
             return fetch('/patients')
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (!data || data.length === 0) {
                         list.innerHTML = '<p class="p-6 text-center text-on-surface-variant">Chưa có bệnh nhân nào. Hãy thêm bệnh nhân qua API hoặc seed dữ liệu demo.</p>';
-                        UX.track('dashboard_view', { count: 0 });
+                        if (!silent) UX.track('dashboard_view', { count: 0 });
                         return;
                     }
                     renderPatients(data);
-                    UX.track('dashboard_view', { count: data.length });
+                    if (!silent) UX.track('dashboard_view', { count: data.length });
                 })
                 .catch(function (err) {
-                    list.innerHTML = '<p class="p-6 text-center text-error">Lỗi tải dữ liệu: ' + err.message + '</p>';
+                    // Auto-refresh lỗi (vd mạng chập chờn) thì giữ nguyên danh sách cũ, không phá màn hình.
+                    if (!silent) {
+                        list.innerHTML = '<p class="p-6 text-center text-error">Lỗi tải dữ liệu: ' + err.message + '</p>';
+                    }
                 });
         }
 
@@ -524,7 +530,19 @@
             });
         });
 
-        document.addEventListener('DOMContentLoaded', loadPatients);
+        document.addEventListener('DOMContentLoaded', function () { loadPatients(); });
+
+        // ── Tự động làm mới mỗi 30s ────────────────────────────────────────────
+        // Điều dưỡng luôn thấy ca RED mới mà không phải bấm refresh thủ công.
+        // Làm mới ngầm (giữ nguyên bộ lọc đang chọn) và tạm dừng khi tab bị ẩn
+        // để đỡ tốn tài nguyên/khỏi gọi API vô ích.
+        var AUTO_REFRESH_MS = 30000;
+        setInterval(function () {
+            if (document.hidden) return;
+            loadPatients(true).then(function () {
+                if (currentFilter) applyFilter(currentFilter);
+            });
+        }, AUTO_REFRESH_MS);
 
         function callPatient(id, btn) {
             // Đo UX: mọi lượt bấm gọi + riêng ca RED thì tính "thời gian phản ứng"
