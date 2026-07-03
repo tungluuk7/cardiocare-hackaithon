@@ -58,6 +58,15 @@ services:
         sync: false
       - key: ZALO_ZNS_TEMPLATE_ID
         sync: false
+      # ── VNPT SmartUX (đo trải nghiệm web) ─────────────────────────────────
+      # Điền GIÁ TRỊ trong Render Dashboard đúng như snippet console SmartUX cấp.
+      # Để trống APP_KEY = tắt tracking (web vẫn chạy).
+      - key: SMARTUX_APP_KEY
+        sync: false
+      - key: SMARTUX_URL
+        sync: false
+      - key: SMARTUX_SDK_PATH
+        sync: false
 
     # ── Bật persistent disk để giữ SQLite qua các lần deploy (cần plan trả phí) ──
     # disk:
