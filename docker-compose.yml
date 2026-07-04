@@ -1,0 +1,18 @@
+# Chạy CardioCare chỉ với 1 lệnh:
+#     docker compose up --build
+# Rồi mở:  http://localhost:8000/static/index.html
+services:
+  cardiocare:
+    build: .
+    container_name: cardiocare
+    ports:
+      - "8000:8000"
+    # Nạp .env NẾU CÓ (bật VNPT SmartVoice/SmartUX/SmartReader, Twilio...).
+    # Không có .env vẫn chạy bình thường ở chế độ fallback (đủ để demo).
+    # (Compose cũ không hiểu 'required' → xoá 3 dòng env_file bên dưới là chạy fallback.)
+    env_file:
+      - path: .env
+        required: false
+    # Seed dữ liệu bệnh nhân mẫu rồi khởi động, để dashboard có sẵn ca demo.
+    command: sh -c "python seed_demo.py --reset || true; uvicorn main:app --host 0.0.0.0 --port 8000"
+    restart: unless-stopped
