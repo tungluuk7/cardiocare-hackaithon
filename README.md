@@ -11,31 +11,11 @@ khi nguy cấp.
 
 ## ⚡ Cài đặt & chạy — 1 lệnh
 
-### Cách 1 — Docker (khuyên dùng, không cần cài Python)
+### Sử dụng Docker
 ```bash
 docker compose up --build
 ```
 Mở **http://localhost:8000/static/index.html** (dashboard đã có sẵn bệnh nhân demo).
-
-### Cách 2 — Chạy trực tiếp (cần Python 3.12+)
-| Hệ điều hành | Lệnh |
-|---|---|
-| **Windows** (PowerShell) | `./run.ps1 -Seed` |
-| **Linux / macOS** | `bash run.sh --seed` |
-
-Cả hai tự tạo virtualenv, cài dependencies, seed dữ liệu mẫu và khởi động server.
-
-> Không cần `.env` vẫn chạy được (chế độ fallback: giọng nói gTTS, triage theo từ khoá,
-> gọi điện mô phỏng). Để bật đầy đủ VNPT SmartVoice/SmartUX/SmartReader, Twilio, Telegram…
-> tạo file `.env` từ `.env.example` rồi điền khoá (xem `SMARTUX_SETUP.md`, `TWILIO_SETUP.md`).
-
-Sau khi chạy:
-- Dashboard điều dưỡng: http://localhost:8000/static/index.html
-- Cửa sổ chat (bệnh nhân): http://localhost:8000/static/phone.html
-- Báo cáo UX: http://localhost:8000/static/ux.html
-- API docs: http://localhost:8000/docs
-
----
 
 ## Tính năng chính
 - **Voicebot tự động gọi** theo lịch (VNPT SmartVoice TTS/STT + Twilio) → hỏi thăm, ghi âm, chuyển văn bản.
