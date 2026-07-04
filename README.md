@@ -24,21 +24,12 @@ tải. CardioCare lấp khoảng trống này bằng một quy trình khép kín
 
 ## 2. Cài đặt và chạy (một lệnh)
 
-### Docker (khuyến nghị — không cần cài Python)
+### Docker
 
 ```bash
 docker compose up --build
 ```
-
-### Chạy trực tiếp (yêu cầu Python 3.12+)
-
-| Hệ điều hành | Lệnh |
-|---|---|
-| Windows (PowerShell) | `./run.ps1 -Seed` |
-| Linux / macOS | `bash run.sh --seed` |
-
-Cả ba cách đều tự cài phụ thuộc, nạp dữ liệu bệnh nhân mẫu và khởi động máy chủ. Sau
-khi chạy, mở **http://localhost:8000/static/index.html**.
+Sau khi chạy, mở **http://localhost:8000/static/index.html**.
 
 Ứng dụng hoạt động ngay cả khi chưa có tệp `.env` (chế độ dự phòng: giọng nói gTTS,
 phân loại theo từ khóa, gọi điện mô phỏng). Để bật đầy đủ các dịch vụ VNPT, Twilio,
