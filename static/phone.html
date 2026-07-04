@@ -357,21 +357,24 @@ function startRecognition() {
     };
 
     recognition.onend = function () {
-        // Chưa bấm dừng mà phiên tự kết thúc (im lặng / blip mạng) → nghe tiếp.
-        // Có trần 5 lần để không kẹt vô hạn khi mạng thật sự không tới được.
+        // Nguồn sự thật = ĐÚNG THỨ NGƯỜI DÙNG THẤY trong ô (final + interim).
+        // (sttBuffer chỉ chứa final; nếu bấm dừng lúc câu còn "interim" thì
+        //  sttBuffer rỗng nhưng ô vẫn có chữ → phải lấy từ ô ra.)
+        var seen = input.value.trim();
+        // Chưa bấm dừng mà phiên tự kết thúc (im lặng / blip mạng) → nghe tiếp,
+        // GIỮ lại text đang thấy để không mất khi khởi động lại. Trần 5 lần.
         if (!manualStop && sttRetries < 5) {
             sttRetries++;
+            sttBuffer = seen ? seen + ' ' : sttBuffer;
             try { recognition.start(); return; } catch (err) { /* rơi xuống dưới */ }
         }
         isListening = false;
         setMicState(false);
         input.placeholder = 'Nhập tin nhắn...';
-        var text = sttBuffer.trim();
         sttBuffer = '';
-        if (text) {                      // gửi những gì đã nghe được
-            input.value = text;
-            sendMessage('voice');
-        } else if (!manualStop) {        // hết lượt thử mà vẫn trống
+        if (seen) {
+            sendMessage('voice');        // sendMessage tự đọc input.value (đang giữ 'seen')
+        } else if (!manualStop) {
             appendMessage('Cháu chưa nghe được giọng nói (có thể do mạng). Bác thử lại, '
                 + 'hoặc gõ giúp cháu nhé ạ.', false);
         }
