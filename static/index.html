@@ -356,7 +356,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label class="text-sm sm:col-span-2">Họ tên <span class="text-error">*</span>
                         <input id="ocrName" class="w-full mt-1 border border-outline-variant rounded-lg px-3 py-2" /></label>
-                    <label class="text-sm">SĐT bệnh nhân
+                    <label class="text-sm">SĐT bệnh nhân <span class="text-error">*</span>
                         <input id="ocrPhone" class="w-full mt-1 border border-outline-variant rounded-lg px-3 py-2" /></label>
                     <label class="text-sm">Tuổi
                         <input id="ocrAge" type="number" class="w-full mt-1 border border-outline-variant rounded-lg px-3 py-2" /></label>
@@ -700,7 +700,7 @@
             document.getElementById('ocrCreate').addEventListener('click', function () {
                 var name = document.getElementById('ocrName').value.trim();
                 var phone = document.getElementById('ocrPhone').value.trim();
-                if (!name) { setMsg('Cần nhập Họ tên bệnh nhân.', false); return; }
+                if (!name || !phone) { setMsg('Cần nhập Họ tên và SĐT bệnh nhân (để gọi khi nguy cấp).', false); return; }
                 var ageVal = document.getElementById('ocrAge').value.trim();
                 var body = {
                     name: name, phone: phone,
