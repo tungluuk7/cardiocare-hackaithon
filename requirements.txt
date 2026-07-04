@@ -15,3 +15,6 @@ python-multipart>=0.0.9
 # Dev 1 — fallback giọng nói khi VNPT chưa sẵn sàng (tuỳ chọn)
 gTTS>=2.5.1
 SpeechRecognition>=3.10.4
+
+# Test tự động (pytest) — chạy: pytest -q  (hoặc run_tests.ps1 / run_tests.sh)
+pytest>=8.0
