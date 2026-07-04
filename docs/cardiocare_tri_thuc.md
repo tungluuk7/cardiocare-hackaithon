@@ -6,8 +6,8 @@ Dùng cho trợ lý sàng lọc CardioCare để nhận diện triệu chứng v
 
 ## Phân loại mức độ ưu tiên (triage)
 
-- **RED — Khẩn cấp**: Có bất kỳ một trong các triệu chứng nguy hiểm (đau ngực, ngất / mất ý thức, chảy máu vết thương). Cần can thiệp y tế ngay lập tức.
-- **YELLOW — Theo dõi**: Không có triệu chứng RED nhưng có triệu chứng cần theo dõi (khó thở, chóng mặt, phù chân, hồi hộp, sốt). Cần thông báo điều dưỡng và theo dõi sát.
+- **RED — Khẩn cấp**: Có bất kỳ một trong các triệu chứng nguy hiểm (đau ngực, ngất / mất ý thức, chảy máu vết thương, xuất huyết bất thường, dấu hiệu đột quỵ). Cần can thiệp y tế ngay lập tức.
+- **YELLOW — Theo dõi**: Không có triệu chứng RED nhưng có triệu chứng cần theo dõi (khó thở, chóng mặt, phù chân, hồi hộp, sốt, mệt mỏi, buồn nôn / nôn). Cần thông báo điều dưỡng và theo dõi sát.
 - **GREEN — Bình thường**: Không phát hiện triệu chứng nguy hiểm. Bệnh nhân ăn uống, đi lại bình thường. Chỉ ghi nhận, không cần cảnh báo.
 
 ---
@@ -23,8 +23,16 @@ Bệnh nhân hoặc người nhà thường mô tả: ngất, mất ý thức, b
 Mất ý thức dù chỉ thoáng qua cũng là dấu hiệu khẩn cấp, xếp mức RED.
 
 ### Chảy máu vết thương (RED)
-Bệnh nhân thường mô tả: chảy máu, xuất huyết, máu chảy, vết thương chảy máu, máu nhiều, mất máu, chảy máu không cầm.
+Bệnh nhân thường mô tả: chảy máu, máu chảy, vết thương chảy máu, máu nhiều, mất máu, chảy máu không cầm, rỉ máu vết mổ.
 Chảy máu nhiều hoặc không cầm được là tình huống khẩn cấp, xếp mức RED.
+
+### Xuất huyết bất thường (RED)
+Bệnh nhân dùng thuốc kháng kết tập tiểu cầu kép (Aspirin + Clopidogrel) sau đặt stent có nguy cơ xuất huyết. Thường mô tả: đi ngoài phân đen, nôn ra máu, tiểu ra máu, chảy máu cam, chảy máu chân răng, bầm tím nhiều, xuất huyết dưới da.
+Đây là biến chứng nguy hiểm của thuốc chống đông, xếp mức RED.
+
+### Dấu hiệu đột quỵ (RED)
+Bệnh nhân tim mạch có nguy cơ đột quỵ do huyết khối. Thường mô tả: méo miệng, yếu / liệt / tê nửa người, tay chân yếu, nói khó, nói ngọng, cứng lưỡi, mắt mờ đột ngột.
+Cần cấp cứu trong "giờ vàng", xếp mức RED.
 
 ---
 
@@ -48,7 +56,15 @@ Theo dõi nhịp tim, ghi nhận tần suất.
 
 ### Sốt (YELLOW)
 Bệnh nhân thường mô tả: sốt, nóng sốt, nhiệt độ cao, nóng người, sốt cao, người hâm hấp.
-Theo dõi thân nhiệt.
+Theo dõi thân nhiệt; đề phòng nhiễm trùng vết chọc mạch.
+
+### Mệt mỏi (YELLOW)
+Bệnh nhân thường mô tả: mệt, mệt mỏi, uể oải, kiệt sức, yếu sức, đuối sức, rã rời.
+Có thể là dấu hiệu suy tim, cung lượng tim thấp hoặc thiếu máu (do xuất huyết). Cần theo dõi.
+
+### Buồn nôn / Nôn (YELLOW)
+Bệnh nhân thường mô tả: buồn nôn, nôn, nôn ói, nôn mửa, buồn ói, nôn nao.
+Có thể liên quan nhồi máu cơ tim hoặc tác dụng phụ của thuốc. Cần theo dõi.
 
 ---
 
@@ -62,6 +78,14 @@ Chỉ ghi nhận, không cảnh báo.
 ## Lưu ý về phủ định
 
 Nếu bệnh nhân phủ định một triệu chứng (ví dụ: "không đau ngực", "chưa bị khó thở", "hết sốt rồi"), thì KHÔNG tính triệu chứng đó. Chỉ ghi nhận các triệu chứng bệnh nhân đang thực sự gặp.
+
+---
+
+## Lưu ý về tiếng Việt không dấu
+
+Giọng nói chuyển văn bản (STT) hoặc gõ phím đôi khi trả về không dấu ("dau nguc",
+"kho tho", "sung chan"). Hệ thống nhận diện cả dạng có dấu lẫn không dấu cho mọi
+triệu chứng ở trên.
 
 ---
 

@@ -32,6 +32,27 @@ def test_triage_levels(transcript, expected):
     assert asyncio.run(analyze(transcript)).level == expected
 
 
+# Không dấu (STT/gõ thiếu dấu) + triệu chứng lâm sàng mở rộng + chống dương tính giả
+TRIAGE_EXTENDED = [
+    ("dau nguc du doi tu sang",              "RED"),     # không dấu → RED
+    ("kho tho va sung chan",                 "YELLOW"),  # không dấu → YELLOW
+    ("đi ngoài phân đen mấy hôm nay",        "RED"),     # xuất huyết tiêu hoá (DAPT)
+    ("di ngoai phan den",                    "RED"),     # không dấu
+    ("bác bị méo miệng, yếu nửa người",      "RED"),     # dấu hiệu đột quỵ
+    ("mệt mỏi rã rời cả ngày",               "YELLOW"),  # mệt mỏi
+    ("met moi ca ngay",                      "YELLOW"),  # không dấu
+    ("buồn nôn, nôn ói nhiều",               "YELLOW"),  # buồn nôn/nôn
+    ("bác ăn được một xíu, người khỏe",      "GREEN"),   # "xíu" KHÔNG được nhầm thành ngất
+    ("con gọi hỏi thăm, bác nói chuyện bình thường", "GREEN"),  # "nói" KHÔNG thành nôn
+    ("bác không thấy mệt, ăn uống tốt",      "GREEN"),   # phủ định mệt
+]
+
+
+@pytest.mark.parametrize("transcript,expected", TRIAGE_EXTENDED)
+def test_triage_extended(transcript, expected):
+    assert asyncio.run(analyze(transcript)).level == expected
+
+
 # ── OCR: bóc tách giấy ra viện (2 layout khác nhau) ───────────────────────────
 PAPER_1 = [
     "Họ và tên người bệnh: NGUYỄN VĂN HÙNG",
