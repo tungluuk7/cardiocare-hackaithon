@@ -235,7 +235,8 @@ function initChat() {
         });
 }
 
-function sendMessage() {
+function sendMessage(channel) {
+    channel = channel || 'text';
     var input = document.getElementById('phoneInput');
     var text = input.value.trim();
     if (!text) return;
@@ -248,7 +249,7 @@ function sendMessage() {
     }
 
     appendMessage(text, true);
-    UX.track('chat_send', { channel: 'text' });
+    UX.track('chat_send', { channel: channel });
 
     fetch('/chatbot/message', {
         method: 'POST',
@@ -267,64 +268,107 @@ function sendMessage() {
         chatSymptoms = data.symptoms || [];
         chatSymptomLabels = data.symptom_labels || [];
         updateTriage();
-        UX.track('chat_completed', { level: chatLevel, turn: chatTurn, channel: 'text' });
+        UX.track('chat_completed', { level: chatLevel, turn: chatTurn, channel: channel });
     })
     .catch(function() {
         appendMessage('Xin lỗi, cháu chưa nghe rõ. Bác nói lại giúp cháu nhé!', false);
     });
 }
 
-document.getElementById('phoneSend').addEventListener('click', sendMessage);
+document.getElementById('phoneSend').addEventListener('click', function () { sendMessage('text'); });
 document.getElementById('phoneInput').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') sendMessage();
 });
 
+// ── Mic ────────────────────────────────────────────────────────────────────
+// Ưu tiên Web Speech API: trình duyệt nhận giọng nói tiếng Việt NGAY, không cần
+// upload/chuyển mã (MediaRecorder xuất webm/opus mà STT server không đọc được).
+// Không hỗ trợ (Firefox…) → fallback ghi âm rồi gửi VNPT STT.
+var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+var recognition = null;
+var isListening = false;
 var mediaRecorder = null;
 var audioChunks = [];
 var isRecording = false;
 
-document.getElementById('phoneMic').addEventListener('click', function() {
+function setMicState(on) {
+    var btn = document.getElementById('phoneMic');
+    var icon = btn.querySelector('span');
+    btn.classList.toggle('recording', on);
+    icon.textContent = on ? 'stop' : 'mic';
+    icon.dataset.icon = on ? 'stop' : 'mic';
+}
+
+document.getElementById('phoneMic').addEventListener('click', function () {
+    if (SpeechRec) toggleSpeech();
+    else toggleRecorder();
+});
+
+function toggleSpeech() {
+    if (isListening) { if (recognition) recognition.stop(); return; }
+    recognition = new SpeechRec();
+    recognition.lang = 'vi-VN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+
+    var input = document.getElementById('phoneInput');
+    recognition.onstart = function () {
+        isListening = true;
+        setMicState(true);
+        input.placeholder = 'Đang nghe... bác nói đi ạ';
+        UX.track('chat_mic', { engine: 'web-speech' });
+    };
+    recognition.onresult = function (e) {
+        var text = (e.results[0][0].transcript || '').trim();
+        if (text) {
+            input.value = text;
+            sendMessage('voice');
+        }
+    };
+    recognition.onerror = function (e) {
+        if (e.error !== 'aborted' && e.error !== 'no-speech') {
+            appendMessage('Cháu chưa nhận được giọng nói (' + e.error +
+                '). Bác thử lại hoặc gõ giúp cháu nhé ạ.', false);
+        }
+    };
+    recognition.onend = function () {
+        isListening = false;
+        setMicState(false);
+        input.placeholder = 'Nhập tin nhắn...';
+    };
+    try { recognition.start(); } catch (err) { /* đang chạy → bỏ qua */ }
+}
+
+function toggleRecorder() {
     if (isRecording) {
         mediaRecorder.stop();
         isRecording = false;
-        this.classList.remove('recording');
-        this.querySelector('span').textContent = 'mic';
-        this.querySelector('span').dataset.icon = 'mic';
+        setMicState(false);
         return;
     }
-
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        appendMessage('Trình duyệt không hỗ trợ ghi âm.', false);
+        appendMessage('Trình duyệt không hỗ trợ mic. Bác dùng Chrome/Edge hoặc gõ tin nhắn giúp cháu nhé ạ.', false);
         return;
     }
-
     navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
+        .then(function (stream) {
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             audioChunks = [];
-
-            mediaRecorder.ondataavailable = function(e) {
-                if (e.data.size > 0) audioChunks.push(e.data);
+            mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = function () {
+                stream.getTracks().forEach(function (t) { t.stop(); });
+                sendAudio(new Blob(audioChunks, { type: 'audio/webm' }));
             };
-
-            mediaRecorder.onstop = function() {
-                stream.getTracks().forEach(function(t) { t.stop(); });
-                var blob = new Blob(audioChunks, { type: 'audio/webm' });
-                sendAudio(blob);
-            };
-
             mediaRecorder.start();
             isRecording = true;
-            UX.track('chat_mic', {});
-            var btn = document.getElementById('phoneMic');
-            btn.classList.add('recording');
-            btn.querySelector('span').textContent = 'stop';
-            btn.querySelector('span').dataset.icon = 'stop';
+            setMicState(true);
+            UX.track('chat_mic', { engine: 'recorder' });
         })
-        .catch(function() {
-            appendMessage('Không thể truy cập micro. Vui lòng kiểm tra quyền.', false);
+        .catch(function () {
+            appendMessage('Không thể truy cập micro. Vui lòng cho phép quyền micro rồi thử lại ạ.', false);
         });
-});
+}
 
 function sendAudio(blob) {
     var input = document.getElementById('phoneInput');
