@@ -1,0 +1,4 @@
+# Ép LF cho script chạy trên Linux/macOS + trong Docker (tránh lỗi CRLF \r).
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
