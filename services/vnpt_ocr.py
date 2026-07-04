@@ -45,9 +45,17 @@ def ocr_ready() -> bool:
     return bool(settings.SMARTREADER_TOKEN_ID and settings.SMARTREADER_ACCESS_TOKEN)
 
 
+def _bearer(tok: str) -> str:
+    """VNPT yêu cầu 'Bearer <access_token>'. Tự thêm nếu người dùng dán token thô."""
+    tok = (tok or "").strip()
+    if tok and not tok.lower().startswith("bearer "):
+        tok = "Bearer " + tok
+    return tok
+
+
 def _auth_headers(json: bool = True) -> dict:
     h = {
-        "Authorization": settings.SMARTREADER_ACCESS_TOKEN,
+        "Authorization": _bearer(settings.SMARTREADER_ACCESS_TOKEN),
         "Token-id":      settings.SMARTREADER_TOKEN_ID,
         "Token-key":     settings.SMARTREADER_TOKEN_KEY,
         "mac-address":   _MAC,
