@@ -287,6 +287,9 @@ document.getElementById('phoneInput').addEventListener('keydown', function(e) {
 var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 var recognition = null;
 var isListening = false;
+var manualStop = false;   // true khi NGƯỜI DÙNG bấm ⏹ (phân biệt với tự kết thúc)
+var sttBuffer = '';       // gom lời đã nghe qua nhiều lần khởi động lại
+var sttRetries = 0;       // trần thử lại khi mạng chập chờn / im lặng
 var mediaRecorder = null;
 var audioChunks = [];
 var isRecording = false;
@@ -305,38 +308,75 @@ document.getElementById('phoneMic').addEventListener('click', function () {
 });
 
 function toggleSpeech() {
-    if (isListening) { if (recognition) recognition.stop(); return; }
+    if (isListening) {           // BẤM LẦN 2 = DỪNG theo ý người dùng
+        manualStop = true;
+        if (recognition) recognition.stop();
+        return;
+    }
+    // Bắt đầu phiên nghe mới
+    manualStop = false;
+    sttBuffer = '';
+    sttRetries = 0;
+    UX.track('chat_mic', { engine: 'web-speech' });
+    startRecognition();
+}
+
+function startRecognition() {
     recognition = new SpeechRec();
     recognition.lang = 'vi-VN';
-    recognition.interimResults = false;
+    recognition.interimResults = true;   // hiện chữ NGAY khi đang nói
+    recognition.continuous = true;       // nghe LIÊN TỤC, không tự cắt sau 1 câu
     recognition.maxAlternatives = 1;
-    recognition.continuous = false;
 
     var input = document.getElementById('phoneInput');
+
     recognition.onstart = function () {
         isListening = true;
         setMicState(true);
-        input.placeholder = 'Đang nghe... bác nói đi ạ';
-        UX.track('chat_mic', { engine: 'web-speech' });
+        input.placeholder = 'Đang nghe... bấm ⏹ khi nói xong ạ';
     };
+
     recognition.onresult = function (e) {
-        var text = (e.results[0][0].transcript || '').trim();
-        if (text) {
-            input.value = text;
-            sendMessage('voice');
+        sttRetries = 0;                  // nghe được tiếng → reset đếm thử lại
+        var interim = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+            var t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) sttBuffer += t + ' ';
+            else interim += t;
         }
+        input.value = (sttBuffer + interim).trim();   // xem trực tiếp lời đang nói
     };
+
     recognition.onerror = function (e) {
-        if (e.error !== 'aborted' && e.error !== 'no-speech') {
-            appendMessage('Cháu chưa nhận được giọng nói (' + e.error +
-                '). Bác thử lại hoặc gõ giúp cháu nhé ạ.', false);
+        // Lỗi quyền micro → dừng hẳn, báo rõ. 'network'/'no-speech'/'aborted'
+        // coi là tạm thời: KHÔNG báo lỗi, để onend tự khởi động lại.
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+            manualStop = true;
+            appendMessage('Bác cho phép quyền micro cho trang này rồi thử lại giúp cháu nhé ạ.', false);
         }
     };
+
     recognition.onend = function () {
+        // Chưa bấm dừng mà phiên tự kết thúc (im lặng / blip mạng) → nghe tiếp.
+        // Có trần 5 lần để không kẹt vô hạn khi mạng thật sự không tới được.
+        if (!manualStop && sttRetries < 5) {
+            sttRetries++;
+            try { recognition.start(); return; } catch (err) { /* rơi xuống dưới */ }
+        }
         isListening = false;
         setMicState(false);
         input.placeholder = 'Nhập tin nhắn...';
+        var text = sttBuffer.trim();
+        sttBuffer = '';
+        if (text) {                      // gửi những gì đã nghe được
+            input.value = text;
+            sendMessage('voice');
+        } else if (!manualStop) {        // hết lượt thử mà vẫn trống
+            appendMessage('Cháu chưa nghe được giọng nói (có thể do mạng). Bác thử lại, '
+                + 'hoặc gõ giúp cháu nhé ạ.', false);
+        }
     };
+
     try { recognition.start(); } catch (err) { /* đang chạy → bỏ qua */ }
 }
 
