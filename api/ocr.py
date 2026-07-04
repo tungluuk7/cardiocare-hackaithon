@@ -8,7 +8,7 @@ QUAN TRỌNG (an toàn y tế): endpoint chỉ TRẢ BẢN NHÁP, KHÔNG tự gh
 Điều dưỡng xem/sửa trên form rồi mới bấm tạo qua POST /patients (human-in-the-loop).
 """
 from fastapi import APIRouter, UploadFile, File
-from services.vnpt_ocr import ocr_ready, ocr_lines, parse_discharge
+from services.vnpt_ocr import ocr_ready, ocr_lines, parse_discharge, OcrError
 
 router = APIRouter(prefix="/ocr", tags=["ocr"])
 
@@ -34,8 +34,12 @@ async def ocr_discharge(file: UploadFile = File(...)):
 
     try:
         lines = await ocr_lines(data, file.filename or "discharge.pdf")
+    except OcrError as e:
+        # Lộ nguyên nhân từ VNPT để chẩn đoán (bước + HTTP + message).
+        return {"ok": False,
+                "reason": f"VNPT lỗi ở bước {e.step}: HTTP {e.status} — {e.short()}",
+                "step": e.step, "status": e.status}
     except Exception as e:
-        # Chỉ lộ tên loại lỗi, không lộ chi tiết nội bộ.
         return {"ok": False, "reason": f"OCR lỗi ({type(e).__name__}). Thử lại hoặc nhập tay."}
 
     if not lines:

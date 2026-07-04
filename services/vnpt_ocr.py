@@ -21,6 +21,25 @@ _BASE = settings.VNPT_VOICE_BASE_URL          # https://api.idg.vnpt.vn
 _MAC = "EGOV-DIGDOC-WEB-API"                   # giá trị mac-address theo Postman
 
 
+class OcrError(Exception):
+    """Lỗi từ SmartReader, giữ lại bước + HTTP status + body để chẩn đoán."""
+    def __init__(self, step: str, status: int, body: str):
+        self.step, self.status, self.body = step, status, body
+        super().__init__(f"{step} HTTP {status}: {body[:300]}")
+
+    def short(self) -> str:
+        """Trích message VNPT nếu có, không thì cắt gọn body."""
+        import json as _json
+        try:
+            j = _json.loads(self.body)
+            msg = j.get("message") or j.get("error") or j.get("error_description")
+            if msg:
+                return str(msg)
+        except Exception:
+            pass
+        return (self.body or "").strip()[:160] or "(không có nội dung)"
+
+
 def ocr_ready() -> bool:
     """Có đủ credentials để gọi SmartReader không."""
     return bool(settings.SMARTREADER_TOKEN_ID and settings.SMARTREADER_ACCESS_TOKEN)
@@ -53,12 +72,13 @@ async def ocr_lines(file_bytes: bytes, filename: str) -> list[str]:
             data={"title": "cardiocare-doc", "description": "medical document"},
             headers=_auth_headers(json=False),
         )
-        add.raise_for_status()
+        if add.status_code >= 400:
+            raise OcrError("addFile", add.status_code, add.text)
         obj = add.json().get("object", {})
         file_hash = obj.get("hash")
         file_type = obj.get("fileType") or _guess_type(filename)
         if not file_hash:
-            raise RuntimeError(f"addFile không trả hash: {add.text[:200]}")
+            raise OcrError("addFile", add.status_code, add.text)
 
         # B2: OCR text thuần
         scan = await client.post(
@@ -72,7 +92,8 @@ async def ocr_lines(file_bytes: bytes, filename: str) -> list[str]:
             },
             headers=_auth_headers(json=True),
         )
-        scan.raise_for_status()
+        if scan.status_code >= 400:
+            raise OcrError("ocr/scan", scan.status_code, scan.text)
         return _flatten_lines(scan.json().get("object", {}))
 
 
