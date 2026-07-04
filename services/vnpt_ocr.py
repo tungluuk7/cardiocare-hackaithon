@@ -137,24 +137,33 @@ def parse_discharge(lines: list[str]) -> dict:
     return draft
 
 
+# Ranh giới cắt giá trị: gặp trường KẾ dính chung dòng thì dừng.
+_FIELD_BOUNDARY = r"\s{2,}|giới tính|số thẻ|tổng số ngày|mã bệnh|ngày sinh|khoa\b"
+
+
 def _value_for(label_patterns: list[str], lines: list[str]) -> str:
     """
-    Tìm dòng chứa 1 trong các nhãn → lấy phần SAU dấu ':' (hoặc sau nhãn).
-    Nếu nhãn đứng cuối dòng (không có giá trị) → thử lấy dòng kế tiếp.
+    Bóc giá trị của trường theo nhãn.
+
+    - Ưu tiên NHÃN CỤ THỂ trước (duyệt từng pattern qua mọi dòng) để nhãn phụ
+      trên dòng khác không cướp mất (vd "Lời dặn của bác sĩ:" không được nhận là
+      "Bác sĩ điều trị").
+    - Giá trị lấy SAU dấu ':' đứng sau nhãn (form VN dạng "Nhãn ...: giá trị"),
+      cắt ở ranh giới trường kế tiếp. Nhãn đứng một mình (heading) → lấy dòng kế.
     """
-    for i, line in enumerate(lines):
-        low = line.lower()
-        for pat in label_patterns:
-            m = re.search(pat, low)
+    for pat in label_patterns:
+        for i, line in enumerate(lines):
+            m = re.search(pat, line.lower())
             if not m:
                 continue
-            after = line[m.end():]
-            after = re.sub(r"^\s*[:\-–]\s*", "", after).strip()
-            # bỏ nhãn phụ dính kèm (vd "Tuổi: 67 Giới tính: Nam")
-            after = re.split(r"\s{2,}|giới tính|nam\b|nữ\b", after, maxsplit=1, flags=re.I)[0].strip()
-            if after:
-                return after
-            if i + 1 < len(lines):
+            rest = line[m.end():]
+            cm = re.search(r":", rest)          # giá trị nằm sau dấu ':' sau nhãn
+            val = rest[cm.end():] if cm else rest
+            val = re.sub(r"^\s*[:\-–]\s*", "", val).strip()
+            val = re.split(_FIELD_BOUNDARY, val, maxsplit=1, flags=re.I)[0].strip()
+            if val:
+                return val
+            if i + 1 < len(lines):              # nhãn là heading → giá trị ở dòng dưới
                 return lines[i + 1].strip()
     return ""
 
