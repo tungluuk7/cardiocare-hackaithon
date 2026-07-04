@@ -8,6 +8,7 @@ from api.calls import router as calls_router
 from api.chatbot import router as chatbot_router
 from api.telephony import router as telephony_router
 from api.ux import router as ux_router
+from api.ocr import router as ocr_router
 
 app = FastAPI(title="CardioCare", version="0.1.0")
 
@@ -23,6 +24,7 @@ app.include_router(calls_router)
 app.include_router(chatbot_router)
 app.include_router(telephony_router)
 app.include_router(ux_router)
+app.include_router(ocr_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Lời nhắn thoại gọi lại bệnh nhân (sinh bởi POST /calls/{id}/callback)

@@ -67,6 +67,14 @@ services:
         sync: false
       - key: SMARTUX_SDK_PATH
         sync: false
+      # ── VNPT SmartReader (OCR giấy ra viện) ───────────────────────────────
+      # Điền Token-id/Token-key trong Dashboard. Để trống = ẩn nút OCR (web vẫn chạy).
+      - key: SMARTREADER_TOKEN_ID
+        sync: false
+      - key: SMARTREADER_TOKEN_KEY
+        sync: false
+      - key: SMARTREADER_ACCESS_TOKEN
+        sync: false
 
     # ── Bật persistent disk để giữ SQLite qua các lần deploy (cần plan trả phí) ──
     # disk:

@@ -72,6 +72,16 @@ class Settings:
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()  # từ @BotFather
     TELEGRAM_CHAT_ID:   str = os.getenv("TELEGRAM_CHAT_ID", "").strip()    # chat_id người thân/điều dưỡng
 
+    # ── VNPT SmartReader (OCR số hoá giấy tờ y tế) ───────────────────────────────
+    # Cùng domain api.idg.vnpt.vn với SmartVoice. Token-id/Token-key RIÊNG của
+    # SmartReader; access_token dùng chung cho các dịch vụ IDG (mặc định lấy lại
+    # của SmartVoice, cho phép override bằng SMARTREADER_ACCESS_TOKEN).
+    SMARTREADER_TOKEN_ID:  str = os.getenv("SMARTREADER_TOKEN_ID", "").strip()
+    SMARTREADER_TOKEN_KEY: str = os.getenv("SMARTREADER_TOKEN_KEY", "").strip()
+    SMARTREADER_ACCESS_TOKEN: str = os.getenv(
+        "SMARTREADER_ACCESS_TOKEN", os.getenv("VNPT_VOICE_ACCESS_TOKEN", "")
+    ).strip()
+
     # ── VNPT SmartUX — thu thập & trực quan hoá tương tác người dùng trên web ─────
     # app_key lấy sau khi tạo dự án tại https://console-smartux.vnpt.vn (tab Tích hợp).
     # Để TRỐNG = tắt (trang web vẫn chạy bình thường, chỉ dùng lớp thu thập nội bộ).
