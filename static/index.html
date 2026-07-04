@@ -313,12 +313,18 @@
         <section class="glass-card rounded-xl overflow-hidden mb-gutter">
             <div class="px-6 py-6 border-b border-outline-variant flex justify-between items-center bg-white/50">
                 <h3 class="font-headline-sm text-headline-sm text-on-surface" id="queueTitle">Danh sách hàng đợi</h3>
-                <button
-                    class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container rounded-lg transition-colors border border-outline-variant font-label-lg text-label-lg"
-                    id="refreshBtn">
-                    <span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
-                    Làm mới
-                </button>
+                <div class="flex items-center gap-3">
+                    <span class="text-body-md text-on-surface-variant flex items-center gap-1" id="lastUpdated" title="Dashboard tự làm mới mỗi 30 giây">
+                        <span class="material-symbols-outlined text-[16px]" data-icon="autorenew">autorenew</span>
+                        <span id="lastUpdatedText">—</span>
+                    </span>
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container rounded-lg transition-colors border border-outline-variant font-label-lg text-label-lg"
+                        id="refreshBtn">
+                        <span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+                        Làm mới
+                    </button>
+                </div>
             </div>
             <div class="divide-y divide-outline-variant" id="patientList">
                 <p class="p-6 text-center text-on-surface-variant" id="loadingMsg">Đang tải dữ liệu...</p>
@@ -462,6 +468,17 @@
             document.getElementById('greenCount').textContent = green;
         }
 
+        // Cập nhật nhãn "Cập nhật lần cuối: HH:MM:SS" mỗi lần tải dữ liệu thành công.
+        function markUpdated() {
+            var el = document.getElementById('lastUpdatedText');
+            if (!el) return;
+            var d = new Date();
+            var hh = String(d.getHours()).padStart(2, '0');
+            var mm = String(d.getMinutes()).padStart(2, '0');
+            var ss = String(d.getSeconds()).padStart(2, '0');
+            el.textContent = 'Cập nhật lúc ' + hh + ':' + mm + ':' + ss;
+        }
+
         // silent = true: làm mới ngầm (auto-refresh) — không hiện "Đang tải", không đếm lượt xem.
         function loadPatients(silent) {
             var list = document.getElementById('patientList');
@@ -471,6 +488,7 @@
             return fetch('/patients')
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
+                    markUpdated();
                     if (!data || data.length === 0) {
                         list.innerHTML = '<p class="p-6 text-center text-on-surface-variant">Chưa có bệnh nhân nào. Hãy thêm bệnh nhân qua API hoặc seed dữ liệu demo.</p>';
                         if (!silent) UX.track('dashboard_view', { count: 0 });
