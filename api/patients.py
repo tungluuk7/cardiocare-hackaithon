@@ -18,7 +18,7 @@ router = APIRouter(prefix="/patients", tags=["patients"])
 
 class PatientIn(BaseModel):
     name: str
-    phone: str
+    phone: str | None = None          # có thể bổ sung sau (giấy ra viện thường không có SĐT)
     age: int | None = None
     doctor_name: str | None = None
     discharge_date: str | None = None
@@ -32,10 +32,10 @@ def create_patient(data: PatientIn):
         cur = conn.execute(
             """INSERT INTO patients (name, phone, age, doctor_name, discharge_date, diagnosis, family_phone)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (data.name, data.phone, data.age, data.doctor_name,
+            (data.name, data.phone or "", data.age, data.doctor_name,
              data.discharge_date, data.diagnosis, data.family_phone),
         )
-        return {"id": cur.lastrowid, **data.model_dump()}
+        return {"id": cur.lastrowid, **data.model_dump(), "phone": data.phone or ""}
 
 
 @router.get("")

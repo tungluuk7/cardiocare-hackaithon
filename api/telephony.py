@@ -111,6 +111,8 @@ async def call_now(patient_id: int):
         p = conn.execute("SELECT * FROM patients WHERE id=?", (patient_id,)).fetchone()
     if not p:
         raise HTTPException(404, "Không tìm thấy bệnh nhân")
+    if not (p["phone"] or "").strip():
+        return {"ok": False, "reason": "Bệnh nhân chưa có số điện thoại — hãy bổ sung trước khi gọi."}
     # reset last_call_date để chắc chắn gọi được
     with get_conn() as conn:
         conn.execute("UPDATE patients SET last_call_date=NULL WHERE id=?", (patient_id,))
