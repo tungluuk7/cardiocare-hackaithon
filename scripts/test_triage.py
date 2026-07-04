@@ -5,6 +5,8 @@ import sys
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+import sys as _s, pathlib as _p
+_s.path.insert(0, str(_p.Path(__file__).resolve().parent.parent))  # chạy được từ scripts/
 from services.triage_engine import analyze
 
 # (transcript, level kỳ vọng)

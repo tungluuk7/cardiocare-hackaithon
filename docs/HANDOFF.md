@@ -202,7 +202,7 @@ tiên theo thứ tự (kênh nào cấu hình trước thì dùng):
 cd "C:\Users\Anh Quan\cardiocare"
 .\run.ps1 -Seed                          # cài deps + seed + chạy server
 # Kiểm tra VNPT:
-.\.venv\Scripts\python test_vnpt.py      # kỳ vọng: TTS OK, STT OK, Triage RED
+.\.venv\Scripts\python scripts\test_vnpt.py      # kỳ vọng: TTS OK, STT OK, Triage RED
 # Gọi điện thật: bật ngrok + cấu hình Twilio (TWILIO_SETUP.md)
 ```
 Dashboard: http://localhost:8000/static/index.html · API docs: http://localhost:8000/docs

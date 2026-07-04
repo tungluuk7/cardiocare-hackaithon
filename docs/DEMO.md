@@ -26,7 +26,7 @@ Mở trình duyệt: **http://localhost:8000/static/index.html**
 
 ```powershell
 $env:PYTHONUTF8=1
-.\.venv\Scripts\python test_vnpt.py
+.\.venv\Scripts\python scripts\test_vnpt.py
 ```
 
 Kỳ vọng: `TTS OK`, `STT OK`, `Triage RED`. Nếu lỗi mạng/token, hệ thống tự
@@ -148,7 +148,7 @@ Nó in ra URL `https://xxx.trycloudflare.com` dùng ngay, không đăng ký.
 | Reset + seed dữ liệu demo | `.\run.ps1 -Seed` |
 | Server + public URL | `.\run.ps1 -Share` |
 | Chỉ seed lại dữ liệu | `.\.venv\Scripts\python seed_demo.py --reset` |
-| Test VNPT TTS/STT | `.\.venv\Scripts\python test_vnpt.py` |
+| Test VNPT TTS/STT | `.\.venv\Scripts\python scripts\test_vnpt.py` |
 | Dashboard | http://localhost:8000/static/index.html |
 | API docs (Swagger) | http://localhost:8000/docs |
 

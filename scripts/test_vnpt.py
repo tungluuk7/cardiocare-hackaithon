@@ -3,6 +3,8 @@ Kiểm tra nhanh VNPT SmartVoice + pipeline triage trước khi demo.
 Chạy:  .venv\\Scripts\\python test_vnpt.py
 """
 import asyncio
+import sys as _s, pathlib as _p
+_s.path.insert(0, str(_p.Path(__file__).resolve().parent.parent))  # chạy được từ scripts/
 from services.vnpt_voice import (
     text_to_speech, speech_to_text,
     _vnpt_tts_ready, _vnpt_stt_ready,

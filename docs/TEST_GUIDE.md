@@ -78,7 +78,7 @@ Mock STT chạy khi `POST /calls/simulate` **không** kèm file audio mà chỉ 
 Chạy script kiểm tra trong PowerShell:
 ```powershell
 cd "C:\Users\Anh Quan\cardiocare"
-.\.venv\Scripts\python test_vnpt.py
+.\.venv\Scripts\python scripts\test_vnpt.py
 ```
 ✅ **ĐẠT nếu** in ra:
 ```

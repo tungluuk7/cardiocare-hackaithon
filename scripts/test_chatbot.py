@@ -17,6 +17,8 @@ if hasattr(sys.stdout, "reconfigure"):
 from dotenv import load_dotenv
 load_dotenv()  # nạp .env để dùng Smartbot GenAI nếu đã cấu hình (không có thì tự fallback keyword)
 
+import sys as _s, pathlib as _p
+_s.path.insert(0, str(_p.Path(__file__).resolve().parent.parent))  # chạy được từ scripts/
 from services.triage_engine import analyze, _classify
 from services.chatbot_flow import generate_reply, get_opening_question
 from services.symptom_schema import SYMPTOM_LABELS
