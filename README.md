@@ -22,14 +22,33 @@ tải. CardioCare lấp khoảng trống này bằng một quy trình khép kín
 
 ---
 
-## 2. Cài đặt và chạy (một lệnh)
+## 2. Cài đặt và chạy
 
-### Docker
+**Yêu cầu:** cài **Docker Desktop** (Cách A) *hoặc* **Python 3.12+** (Cách B) — không cần cả hai.
+
+Lấy mã nguồn:
+
+```bash
+git clone https://github.com/tungluuk7/cardiocare-hackaithon.git
+cd cardiocare-hackaithon
+```
+
+### Cách A — Docker (một lệnh, khuyến nghị)
 
 ```bash
 docker compose up --build
 ```
-Sau khi chạy, mở **http://localhost:8000/static/index.html**.
+
+### Cách B — Không dùng Docker (Python + venv, cũng một lệnh)
+
+| Hệ điều hành | Lệnh |
+|---|---|
+| Linux / macOS | `bash run.sh --seed` |
+| Windows (PowerShell) | `./run.ps1 -Seed` |
+
+Script tự tạo virtualenv, cài phụ thuộc, nạp dữ liệu demo rồi khởi động server.
+
+Sau khi chạy (cách nào cũng vậy), mở **http://localhost:8000/static/index.html**.
 
 Ứng dụng hoạt động ngay cả khi chưa có tệp `.env` (chế độ dự phòng: giọng nói gTTS,
 phân loại theo từ khóa, gọi điện mô phỏng). Để bật đầy đủ các dịch vụ VNPT, Twilio,
@@ -55,6 +74,9 @@ Các giao diện chính:
 | Linux / macOS | `bash run_tests.sh` |
 | Đã cài phụ thuộc | `pytest` |
 | Docker | `docker compose run --rm cardiocare pytest` |
+
+> Trên Windows, nếu PowerShell chặn chạy script (execution policy):
+> `powershell -ExecutionPolicy Bypass -File run_tests.ps1` (tương tự cho `run.ps1`).
 
 Bộ kiểm thử trong `tests/` chạy hoàn toàn ngoại tuyến và tất định (không cần khóa API):
 phân loại RED/YELLOW/GREEN kèm xử lý phủ định và tiếng Việt không dấu, bóc tách OCR
@@ -100,7 +122,30 @@ hội thoại của chatbot.
 
 ---
 
-## 6. Kiến trúc và công nghệ
+## 6. Giới hạn hiện tại (MVP)
+
+Đây là bản MVP xây trong khuôn khổ hackathon. Một số mặt còn giới hạn, cũng là hướng
+phát triển tiếp theo:
+
+- **Hội thoại chưa thật tự nhiên.** Smartbot/voicebot bám kịch bản hỏi–đáp theo luồng
+  cố định, chưa xử lý mượt khi bệnh nhân cao tuổi trả lời lan man, ngắt lời hay hỏi
+  ngược. Nhận diện triệu chứng thiên về quy tắc/từ khóa nên có thể bỏ sót cách diễn đạt
+  dân dã, vùng miền.
+- **Dashboard gộp chung, chưa phân vai.** Giao diện điều dưỡng và trang bệnh nhân/chat
+  dùng chung một ứng dụng, chưa có đăng nhập, phân quyền hay tách biệt dữ liệu theo vai
+  trò (bác sĩ / điều dưỡng / bệnh nhân / người thân).
+- **OCR mới đọc giấy ra viện.** Bộ số hóa hiện chỉ bóc tách *giấy báo ra viện* theo một
+  số bố cục quen thuộc; chưa đọc đơn thuốc, kết quả xét nghiệm hay chữ viết tay, và vẫn
+  cần điều dưỡng rà soát trước khi lưu.
+- **Phụ thuộc cấu hình dịch vụ ngoài.** Gọi điện thật, giọng nói/OCR/NLP chất lượng cao
+  và cảnh báo người thân chỉ bật khi có khóa API; thiếu khóa thì các phần này chạy mô
+  phỏng để phục vụ demo.
+- **Lưu trữ đơn giản.** Dùng SQLite một tệp — đủ cho demo nhưng chưa tối ưu cho nhiều
+  người dùng đồng thời hoặc triển khai quy mô bệnh viện.
+
+---
+
+## 7. Kiến trúc và công nghệ
 
 Kiến trúc hướng sự kiện gồm bốn phân hệ: thu thập dữ liệu → trích xuất bằng AI → động cơ
 phân loại → điểm chạm đa kênh.
@@ -110,7 +155,7 @@ Smartbot · Twilio · Telegram.
 
 ---
 
-## 7. Tài liệu
+## 8. Tài liệu
 
 | Tài liệu | Nội dung |
 |---|---|

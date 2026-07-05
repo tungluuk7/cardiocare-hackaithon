@@ -7,12 +7,10 @@ services:
     container_name: cardiocare
     ports:
       - "8000:8000"
-    # Nạp .env NẾU CÓ (bật VNPT SmartVoice/SmartUX/SmartReader, Twilio...).
+    # .env tự được nạp: Dockerfile COPY toàn bộ mã (kể cả .env nếu có) vào image,
+    # và config.py gọi load_dotenv() lúc khởi động → bật VNPT/Twilio/Telegram khi có khóa.
     # Không có .env vẫn chạy bình thường ở chế độ fallback (đủ để demo).
-    # (Compose cũ không hiểu 'required' → xoá 3 dòng env_file bên dưới là chạy fallback.)
-    env_file:
-      - path: .env
-        required: false
+    # (Không dùng 'env_file' để tương thích MỌI phiên bản Docker Compose, kể cả bản cũ.)
     # Seed dữ liệu bệnh nhân mẫu rồi khởi động, để dashboard có sẵn ca demo.
     command: sh -c "python seed_demo.py --reset || true; uvicorn main:app --host 0.0.0.0 --port 8000"
     restart: unless-stopped
