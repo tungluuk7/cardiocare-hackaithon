@@ -122,7 +122,86 @@ hội thoại của chatbot.
 
 ---
 
-## 6. Giới hạn hiện tại (MVP)
+## 6. Hướng dẫn thao tác từng chức năng
+
+Sau khi chạy (mục 2), mở **http://localhost:8000/static/index.html**. Dữ liệu demo đã
+được nạp sẵn, có thể thao tác ngay. Với các chức năng gọi qua API, mở **/docs** (Swagger)
+— bấm *Try it out* trên từng endpoint là chạy được, không cần công cụ ngoài.
+
+### 6.1. Xem & phân luồng bệnh nhân (Bảng điều khiển điều dưỡng)
+
+1. Mở `/static/index.html`.
+2. Ba thẻ trên cùng **Cờ Đỏ / Vàng / Xanh** hiển thị số ca theo mức ưu tiên. Bấm một
+   thẻ để **lọc** danh sách theo mức đó; bấm **Hiện tất cả** để bỏ lọc.
+3. Bấm **Làm mới** để nạp lại hàng đợi mới nhất.
+4. Mỗi dòng bệnh nhân hiển thị triệu chứng AI trích xuất và thời điểm tương tác cuối.
+   Bấm **tên bệnh nhân** để xem timeline chi tiết (mục 6.5).
+
+### 6.2. Gọi lại bệnh nhân ngay (voicebot)
+
+1. Trên mỗi dòng bệnh nhân, bấm **Gọi lại ngay**.
+2. Nếu **chưa** cấu hình Twilio: hệ thống chạy **mô phỏng** — sinh một cuộc gọi giả,
+   phân loại triệu chứng và cập nhật ngay lên dashboard (bấm *Làm mới* để thấy).
+3. Nếu **đã** cấu hình Twilio (xem `docs/TWILIO_SETUP.md`): voicebot gọi thật tới số
+   bệnh nhân.
+4. Tương đương qua API: `POST /telephony/call/{patient_id}`.
+
+### 6.3. Đặt lịch tự động gọi định kỳ
+
+1. Mở `/docs` → nhóm **telephony**.
+2. `PUT /telephony/schedule/{patient_id}` với `call_time` dạng **HH:MM** (giờ Hà Nội,
+   UTC+7) để đặt giờ gọi hằng ngày.
+3. Bộ lập lịch chạy nền, cứ ~30 giây quét một lần và gọi những bệnh nhân đến giờ mà
+   hôm nay chưa gọi.
+4. Để **demo ngay không cần chờ tới giờ**: gọi `POST /telephony/run-now` để chạy ngay
+   một vòng cho các ca đến hạn. Xem trạng thái bộ lập lịch qua `GET /telephony/status`.
+
+### 6.4. Chatbot hỏi thăm (mô phỏng cuộc gọi trên điện thoại)
+
+1. Mở `/static/phone.html` (hoặc bấm **Mô phỏng điện thoại** ở thanh bên).
+2. Chọn bệnh nhân ở ô trên cùng — trợ lý sẽ mở lời chào hỏi thăm.
+3. **Nhập bằng chữ**: gõ câu trả lời như bệnh nhân (ví dụ *"tôi bị đau ngực và khó thở"*)
+   rồi gửi. Thanh phân loại dưới khung chat đổi màu **VÀNG/ĐỎ** theo mức nguy cấp và liệt
+   kê triệu chứng nhận diện được; triệu chứng cộng dồn qua nhiều lượt.
+4. **Nhập bằng giọng nói**: bấm nút **micro**, nói, rồi bấm dừng — hệ thống chuyển giọng
+   nói thành văn bản và xử lý như trên.
+5. Khi lên mức **ĐỎ**, ca này cũng xuất hiện ở nhóm Cờ Đỏ trên dashboard.
+
+### 6.5. Xem lịch sử & timeline một bệnh nhân
+
+- Từ dashboard bấm tên bệnh nhân, hoặc mở `/static/patient.html?id=<id>`.
+- Trang hiển thị toàn bộ cuộc gọi, bản ghi hội thoại và kết quả triage theo thời gian.
+- Qua API: `GET /patients/{id}/history`.
+
+### 6.6. Thêm bệnh nhân mới
+
+- Mở `/docs` → `POST /patients`, điền tối thiểu `name` và `phone` (kèm `age`,
+  `diagnosis`, `family_phone`… nếu có). `family_phone` là số người thân nhận cảnh báo khi RED.
+
+### 6.7. Số hóa giấy ra viện bằng OCR
+
+1. Mở `/docs` → nhóm **ocr**. `GET /ocr/status` cho biết OCR đang chạy chế độ thật (có
+   khóa VNPT SmartReader) hay mô phỏng.
+2. Dùng endpoint OCR để tải ảnh **giấy ra viện** lên — hệ thống trả về **bản nháp** hồ sơ
+   (chẩn đoán, ngày ra viện…).
+3. Đây là quy trình *human-in-the-loop*: điều dưỡng **rà soát và chỉnh** bản nháp trước
+   khi lưu; OCR **không** tự ghi đè hồ sơ.
+
+### 6.8. Cảnh báo khi có ca nguy cấp (RED)
+
+- Khi một lượt hỏi thăm cho kết quả **ĐỎ**, hệ thống tự tạo cảnh báo trong ứng dụng (hiện
+  trên dashboard) — luôn chạy, không cần cấu hình gì.
+- Nếu đã cấu hình kênh ngoài, cảnh báo còn gửi tới người thân qua **Telegram / Zalo / SMS**
+  và voicebot gọi lại bệnh nhân. Thiếu khóa thì các kênh này chạy mô phỏng (ghi log).
+
+### 6.9. Báo cáo trải nghiệm (UX)
+
+- Mở `/static/ux.html` để xem các chỉ số trải nghiệm: thời gian phản ứng với ca nguy cấp,
+  mức độ tương tác… (kết hợp VNPT SmartUX khi có cấu hình).
+
+---
+
+## 7. Giới hạn hiện tại (MVP)
 
 Đây là bản MVP xây trong khuôn khổ hackathon. Một số mặt còn giới hạn, cũng là hướng
 phát triển tiếp theo:
@@ -145,7 +224,7 @@ phát triển tiếp theo:
 
 ---
 
-## 7. Kiến trúc và công nghệ
+## 8. Kiến trúc và công nghệ
 
 Kiến trúc hướng sự kiện gồm bốn phân hệ: thu thập dữ liệu → trích xuất bằng AI → động cơ
 phân loại → điểm chạm đa kênh.
@@ -155,7 +234,7 @@ Smartbot · Twilio · Telegram.
 
 ---
 
-## 8. Tài liệu
+## 9. Tài liệu
 
 | Tài liệu | Nội dung |
 |---|---|
