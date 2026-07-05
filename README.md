@@ -128,6 +128,12 @@ Sau khi chạy (mục 2), mở **http://localhost:8000/static/index.html**. Dữ
 được nạp sẵn, có thể thao tác ngay. Với các chức năng gọi qua API, mở **/docs** (Swagger)
 — bấm *Try it out* trên từng endpoint là chạy được, không cần công cụ ngoài.
 
+> **Về đường dẫn:** các bước dưới đây dùng gốc `http://localhost:8000` (khi tự chạy theo
+> mục 2). Muốn thử nhanh mà không cài đặt, đổi gốc thành bản demo trực tuyến
+> `https://cardiocare-f2b2.onrender.com` — phần đường dẫn phía sau giữ nguyên. Lưu ý bản
+> demo dùng chung một CSDL và có thể bị reset, nên để test từng chức năng sạch sẽ thì nên
+> tự chạy cục bộ.
+
 ### 6.1. Xem & phân luồng bệnh nhân (Bảng điều khiển điều dưỡng)
 
 1. Mở `/static/index.html`.
