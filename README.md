@@ -133,6 +133,11 @@ Sau khi chạy (mục 2), mở **http://localhost:8000/static/index.html**. Dữ
 > `https://cardiocare-f2b2.onrender.com` — phần đường dẫn phía sau giữ nguyên. Lưu ý bản
 > demo dùng chung một CSDL và có thể bị reset, nên để test từng chức năng sạch sẽ thì nên
 > tự chạy cục bộ.
+>
+> **Chờ server khởi động:** bản demo trên Render (gói miễn phí) sẽ **ngủ khi không dùng**,
+> nên lần mở đầu tiên có thể mất khoảng **30–60 giây** để đánh thức — nếu thấy trang chưa
+> lên hoặc báo lỗi, hãy đợi rồi tải lại. Khi tự chạy cục bộ, cũng đợi tới khi log hiện
+> `Uvicorn running on http://0.0.0.0:8000` rồi mới mở trình duyệt.
 
 ### 6.1. Xem & phân luồng bệnh nhân (Bảng điều khiển điều dưỡng)
 
